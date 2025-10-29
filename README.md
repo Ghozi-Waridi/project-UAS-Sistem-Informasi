@@ -159,23 +159,11 @@ Konfigurasi untuk Flutter web deployment.
    dart run generate.dart nama_feature
    ```
 
-## 📚 Dependencies
-
-### Flutter Dependencies
-
-- `get: ^4.7.2` - State management dan routing
-- `cupertino_icons: ^1.0.8` - iOS style icons
-
-### Rust Dependencies
-
-- `axum: 0.7` - Web framework
-- `tokio: 1` - Async runtime
 
 ## 🏗️ Architecture
 
 Proyek ini menggunakan:
 
-- **Clean Architecture** dengan separation of concerns
 - **GetX** untuk state management dan dependency injection
 - **Feature-based structure** untuk modularity
 - **Rust backend** untuk performa tinggi
