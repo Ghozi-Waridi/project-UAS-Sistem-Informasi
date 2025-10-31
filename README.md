@@ -93,9 +93,7 @@ Konfigurasi untuk Flutter web deployment.
 - **`icons/`** - Web app icons dalam berbagai ukuran
 - **`favicon.png`** - Favicon untuk web browser
 
-### 🧪 Testing (`test/`)
 
-- **`widget_test.dart`** - Unit tests untuk Flutter widgets
 
 ### 🛠️ Development Tools
 
@@ -105,9 +103,7 @@ Konfigurasi untuk Flutter web deployment.
   - Generate boilerplate code untuk controller, view, dan model
   - Usage: `dart run generate.dart feature_name`
 
-- **`analysis_options.yaml`** - Konfigurasi linter Dart
-  - Mengatur aturan coding style
-  - Static analysis rules
+
 
 ## 🚀 Getting Started
 
