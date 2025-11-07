@@ -16,3 +16,11 @@ type LoginResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
 }
+
+type UserProfile struct {
+	UserID      uint   `json:"user_id" binding:"required"`
+	CompanyName string `json:"company_name"`
+	Email       string `json:"email" binding:"required,email"`
+	Name        string `json:"name" binding:"required,min=255"`
+	Role        string `json:"role" binding:"required,oneof=admin dm"`
+}
