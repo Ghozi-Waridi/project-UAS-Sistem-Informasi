@@ -30,12 +30,21 @@ func AuthMiddleware() gin.HandlerFunc {
 			return
 		}
 		claims := &service.MyCustomClaims{}
-		token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
-			if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-				return nil, errors.New("unexpected signing method")
+		tokens, err := jwt.ParseWithClaims(tokenString, claims, func(t *jwt.Token) (interface{}, error) {
+			if _, ok := t.Method.(*jwt.SigningMethodHMAC); !ok {
+				return nil, errors.New("Unexpected signing method")
 			}
-			return []byte(jwtSecret),
+			return []byte(jwtSecret), nil
+		})
+		if err != nil || !tokens.Valid {
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			return
 		}
+		c.Set("userID", claims.UserID)
+		c.Set("companyID", claims.CompanyID)
+		c.Set("userName", claims.Role)
+
+		c.Next()
+
 	}
 }
-
