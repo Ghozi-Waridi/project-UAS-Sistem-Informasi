@@ -2,12 +2,22 @@ package service
 
 import (
 	"errors"
+	"os"
 	"services/internal/models"
 	"services/internal/repository"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+type MyCustomClaims struct {
+	UserID    uint   `json:"user_id"`
+	CompanyID uint   `json:"company_id"`
+	Role      string `json:"role"`
+	jwt.RegisteredClaims
+}
 
 type AuthService interface {
 	Register(input models.RegisterInput) (*models.User, error)
@@ -20,6 +30,33 @@ type authService struct {
 
 func NewAuthService(userRepo repository.UserRepository) AuthService {
 	return &authService{userRepo: userRepo}
+}
+
+func (s *authService) generateToken(user *models.User) (string, error) {
+	jwtKey := os.Getenv("JWT_SECRET")
+	if jwtKey == "" {
+		return "", errors.New("JWT_SECRET Tidak DItermukan")
+	}
+
+	claims := MyCustomClaims{
+		user.UserID,
+		user.CompanyID,
+		user.Role,
+		jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+			NotBefore: jwt.NewNumericDate(time.Now()),
+			Issuer:    "proyek-GDSS",
+		},
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	signedToken, err := token.SignedString([]byte(jwtKey))
+	if err != nil {
+		return "", err
+	}
+	return signedToken, nil
+
 }
 
 func (s *authService) Register(input models.RegisterInput) (*models.User, error) {
@@ -65,7 +102,11 @@ func (s *authService) Login(input models.LoginInput) (*models.LoginResponse, err
 		return nil, errors.New("invalid password")
 	}
 
-	token := "dummy_jwt_token_ganti_ini_nanti"
+	token, err := s.generateToken(user)
+
+	if err != nil {
+		return nil, err
+	}
 	response := models.LoginResponse{
 		Token: token,
 		User:  *user,
