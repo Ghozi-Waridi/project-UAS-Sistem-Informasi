@@ -37,17 +37,21 @@ func main() {
 	// fmt.Println("Database Migration Completed Successfully")
 
 	userReository := repository.CreateUserRepository(db)
+	projectRepository := repository.NewProjectRepository(db)
 
 	authService := service.NewAuthService(userReository)
 	userService := service.NewUserService(userReository)
+	projectService := service.NewProjectService(projectRepository)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
+	projectHandler := handler.NewProjectHandler(projectService)
 
 	r := gin.Default()
 
 	routes.SetupAuthRoutes(r, authHandler)
 	routes.SetupUserRoutes(r, userHandler)
+	routes.SetupProjectRoutes(r, projectHandler)
 
 	log.Println("Starting server on port 8080....")
 	r.Run(":8080")

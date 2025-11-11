@@ -1,5 +1,7 @@
 package models
 
+import "time"
+
 type RegisterInput struct {
 	Name        string `json:"name" binding:"required"`
 	Email       string `json:"email" binding:"required,email"`
@@ -23,4 +25,21 @@ type UserProfile struct {
 	Email       string `json:"email" binding:"required,email"`
 	Name        string `json:"name" binding:"required,min=255"`
 	Role        string `json:"role" binding:"required,oneof=admin dm"`
+}
+
+type CreateProjectInput struct {
+	ProjectName       string `json:"project_name" binding:"required"`
+	Descrtiptuin      string `json:"description"`
+	AggregationMethod string `json:"aggregation_method" binding:"required"`
+}
+
+type ProjectDTO struct {
+	ProjectID         uint      `json:"project_id"`
+	CompanyID         uint      `json:"company_id"`
+	CreatedByAdminID  uint      `json:"created_by_admin_id"`
+	ProjectName       string    `json:"project_name"`
+	Description       string    `json:"description"`
+	Status            string    `json:"status"`
+	AggregationMethod string    `json:"aggregation_method"`
+	CrateAt           time.Time `json:"created_at"`
 }
