@@ -60,3 +60,15 @@ type CriteriaDTO struct {
 	Type             string        `string:"type"`
 	SubCriteria      []CriteriaDTO `json:"sub_criteria,omitempty"`
 }
+
+type CreateAlternativeInput struct {
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+}
+
+type AlternativeDTO struct {
+	AlternativeID uint   `json:"alternative_id"`
+	ProjectID     uint   `json:"project_id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+}

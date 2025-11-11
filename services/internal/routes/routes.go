@@ -40,8 +40,23 @@ func SetupProjectRoutes(r *gin.Engine, projectHandler handler.ProjectHandler) {
 
 			projectGroup.GET("/", projectHandler.GetProjectsByCompany)
 
-			projectGroup.GET("/:id", projectHandler.GetProjectByID)
+			projectGroup.GET("/:projectID", projectHandler.GetProjectByID)
 
+		}
+	}
+}
+
+func SetupCriteriaRoutes(r *gin.Engine, criteriaHandler handler.CriteriaHandler) {
+
+	api := r.Group("/api/v1")
+	{
+
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/criteria", criteriaHandler.CreateCriteria)
+
+			projectGroup.GET("/criteria", criteriaHandler.GetCriteriaByProject)
 		}
 	}
 }

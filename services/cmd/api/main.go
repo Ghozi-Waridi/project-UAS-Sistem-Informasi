@@ -38,20 +38,24 @@ func main() {
 
 	userReository := repository.CreateUserRepository(db)
 	projectRepository := repository.NewProjectRepository(db)
+	criteriarepository := repository.NewCriteriaRepository(db)
 
 	authService := service.NewAuthService(userReository)
 	userService := service.NewUserService(userReository)
 	projectService := service.NewProjectService(projectRepository)
+	criteriService := service.NewCriteriaService(criteriarepository, projectRepository)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	projectHandler := handler.NewProjectHandler(projectService)
+	criteriHandler := handler.NewCriteriaHandler(criteriService)
 
 	r := gin.Default()
 
 	routes.SetupAuthRoutes(r, authHandler)
 	routes.SetupUserRoutes(r, userHandler)
 	routes.SetupProjectRoutes(r, projectHandler)
+	routes.SetupCriteriaRoutes(r, criteriHandler)
 
 	log.Println("Starting server on port 8080....")
 	r.Run(":8080")

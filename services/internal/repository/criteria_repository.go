@@ -25,7 +25,7 @@ func (r *criteriaRepository) CreateCriteria(criteria *models.Criteria) error {
 
 func (r *criteriaRepository) GetCriteriaByProjectID(projectID uint) ([]models.Criteria, error) {
 	var criteriaList []models.Criteria
-	err := r.db.Where("proejct_id = ?", projectID).
+	err := r.db.Where("project_id = ?", projectID).
 		Order("parent_criteria_id IS NOT NULL, parent_criteria_id, criteria_id").
 		Find(&criteriaList).Error
 
