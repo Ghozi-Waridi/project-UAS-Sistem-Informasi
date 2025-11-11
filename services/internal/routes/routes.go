@@ -27,3 +27,21 @@ func SetupUserRoutes(r *gin.Engine, userHandler handler.Userhandler) {
 		}
 	}
 }
+
+func SetupProjectRoutes(r *gin.Engine, projectHandler handler.ProjectHandler) {
+
+	api := r.Group("/api/v1")
+	{
+
+		projectGroup := api.Group("/projects", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/", projectHandler.CreateProject)
+
+			projectGroup.GET("/", projectHandler.GetProjectsByCompany)
+
+			projectGroup.GET("/:id", projectHandler.GetProjectByID)
+
+		}
+	}
+}
