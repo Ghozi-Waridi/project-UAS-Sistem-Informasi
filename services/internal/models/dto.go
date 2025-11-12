@@ -72,3 +72,16 @@ type AlternativeDTO struct {
 	Name          string `json:"name"`
 	Description   string `json:"description"`
 }
+
+type AssignDMInput struct {
+	DMUserID    uint    `json:"dm_user_id" binding:"required"`
+	Method      string  `json:"method" binding:"required,oneof=AHP AHP_SAW TOPSIS DIRECT_WEIGHT"`
+	GroupWeight float64 `json:"group_weight" binding:"required,gte=0,lte=1"`
+}
+type ProjectDMDTO struct {
+	ProjectDMID uint    `json:"project_dm_id"`
+	ProjectID   uint    `json:"project_id"`
+	DMUserID    uint    `json:"dm_user_id"`
+	Method      string  `json:"method"`
+	GroupWeight float64 `json:"group_weight"`
+}
