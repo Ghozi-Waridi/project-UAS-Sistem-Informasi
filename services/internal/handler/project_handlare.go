@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"errors"
 	"net/http"
 	"services/internal/models"
 	"services/internal/service"
@@ -25,25 +24,6 @@ func NewProjectHandler(projectService service.ProjectService) ProjectHandler {
 	return &projectHandler{
 		projectService: projectService,
 	}
-}
-
-func extractUserData(c *gin.Context) (uint, uint, string, error) {
-	userID, ok := c.Get("userID")
-	if !ok {
-		return 0, 0, "", errors.New("userID not found in context")
-	}
-
-	companyID, ok := c.Get("companyID")
-	if !ok {
-		return 0, 0, "", errors.New("companyID not found in context")
-	}
-
-	role, ok := c.Get("role")
-	if !ok {
-		return 0, 0, "", errors.New("role not found in context")
-	}
-
-	return userID.(uint), companyID.(uint), role.(string), nil
 }
 
 func (h *projectHandler) CreateProject(c *gin.Context) {

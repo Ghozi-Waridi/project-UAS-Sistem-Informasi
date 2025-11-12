@@ -8,7 +8,6 @@ type Company struct {
 	SubscriptionPlan string    `gorm:"type:varchar(50);default:'free';column:subscription_plan" json:"subscription_plan"`
 	CreatedAt        time.Time `gorm:"autoCreateTime;column:created_at" json:"created_at"`
 
-	// HAPUS constraint di sini, biarkan GORM hanya menangani relationship
 	Users            []User            `gorm:"foreignKey:CompanyID" json:"-"`
 	DecisionProjects []DecisionProject `gorm:"foreignKey:CompanyID" json:"-"`
 }
@@ -22,7 +21,6 @@ type User struct {
 	Role         string    `gorm:"type:varchar(50);not null;column:role;check:role IN ('admin','dm')" json:"role"`
 	CreatedAt    time.Time `gorm:"autoCreateTime;column:created_at" json:"created_at"`
 
-	// Constraint hanya di sisi "many" (User)
 	Company               Company                `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	ProjectDecisionMakers []ProjectDecisionMaker `gorm:"foreignKey:DMUserID" json:"-"`
 }
@@ -37,11 +35,9 @@ type DecisionProject struct {
 	AggregationMethod string    `gorm:"type:varchar(50);default:'BORDA';column:aggregation_method;check:aggregation_method IN ('BORDA','COPELAND','LAINNYA')" json:"aggregation_method"`
 	CreatedAt         time.Time `gorm:"autoCreateTime;column:created_at" json:"created_at"`
 
-	// Constraint di sisi "many"
 	Company Company `gorm:"foreignKey:CompanyID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	Creator User    `gorm:"foreignKey:CreatedByAdminID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 
-	// Relationship "one to many" - tidak perlu constraint
 	Alternatives          []Alternative          `gorm:"foreignKey:ProjectID" json:"-"`
 	Criteria              []Criteria             `gorm:"foreignKey:ProjectID" json:"-"`
 	ProjectDecisionMakers []ProjectDecisionMaker `gorm:"foreignKey:ProjectID" json:"-"`
@@ -133,4 +129,3 @@ type ResultRanking struct {
 	Alternative          Alternative           `gorm:"foreignKey:AlternativeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	ProjectDecisionMaker *ProjectDecisionMaker `gorm:"foreignKey:ProjectDMID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
-

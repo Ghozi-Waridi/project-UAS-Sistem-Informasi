@@ -7,7 +7,7 @@ import (
 )
 
 type UserService interface {
-	GetUserByID(id string) (*models.UserProfile, error)
+	GetUserByID(id uint) (*models.UserProfile, error)
 }
 
 type userService struct {
@@ -18,7 +18,7 @@ func NewUserService(userRepo repository.UserRepository) UserService {
 	return &userService{userRepo: userRepo}
 }
 
-func (s *userService) GetUserByID(id string) (*models.UserProfile, error) {
+func (s *userService) GetUserByID(id uint) (*models.UserProfile, error) {
 
 	user, err := s.userRepo.FindById(id)
 

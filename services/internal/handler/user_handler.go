@@ -3,6 +3,7 @@ package handler
 import (
 	"net/http"
 	"services/internal/service"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -22,7 +23,14 @@ func NewUserHandler(userService service.UserService) Userhandler {
 func (h *userHandler) GetUserProfile(c *gin.Context) {
 	idStr := c.Param("id")
 
-	user, err := h.userService.GetUserByID(idStr)
+	id64, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"Error": "Invalid user ID format"})
+		return
+	}
+	id := uint(id64)
+
+	user, err := h.userService.GetUserByID(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"Error": "User Not Found"})
 		return
