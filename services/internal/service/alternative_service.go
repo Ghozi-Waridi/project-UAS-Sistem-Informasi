@@ -25,6 +25,13 @@ type alternativeService struct {
 	projectRepo     repository.ProjectRepository
 }
 
+func NewAlternativeService(alternativeRepo repository.AlternativeRepository, projectRepo repository.ProjectRepository) AlternativeService {
+	return &alternativeService{
+		alternativeRepo: alternativeRepo,
+		projectRepo:     projectRepo,
+	}
+}
+
 func (s *alternativeService) checkProjectAccess(projectID uint, companyID uint) error {
 	project, err := s.projectRepo.GetProjectByID(projectID, companyID)
 	if err != nil {
