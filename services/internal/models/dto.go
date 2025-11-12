@@ -43,3 +43,32 @@ type ProjectDTO struct {
 	AggregationMethod string    `json:"aggregation_method"`
 	CrateAt           time.Time `json:"created_at"`
 }
+
+type CreateCriteriaInput struct {
+	Name             string `json:"name" binding:"required"`
+	Code             string `json:"code"`
+	Type             string `json:"type" binding:"required,oneof=benefit cost"`
+	ParentCriteriaID *uint  `json:"parent_criteria_id"`
+}
+
+type CriteriaDTO struct {
+	CriteriaID       uint          `json:"criteria_id"`
+	ProjectID        uint          `json:"project_id"`
+	ParentCriteriaID *uint         `json:"parent_criteria_id,omitempty"`
+	Name             string        `json:"name"`
+	Code             string        `json:"code"`
+	Type             string        `string:"type"`
+	SubCriteria      []CriteriaDTO `json:"sub_criteria,omitempty"`
+}
+
+type CreateAlternativeInput struct {
+	Name        string `json:"name" binding:"required"`
+	Description string `json:"description"`
+}
+
+type AlternativeDTO struct {
+	AlternativeID uint   `json:"alternative_id"`
+	ProjectID     uint   `json:"project_id"`
+	Name          string `json:"name"`
+	Description   string `json:"description"`
+}
