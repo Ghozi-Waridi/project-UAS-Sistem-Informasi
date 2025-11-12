@@ -32,16 +32,33 @@ func SetupProjectRoutes(r *gin.Engine, projectHandler handler.ProjectHandler) {
 
 	api := r.Group("/api/v1")
 	{
-
 		projectGroup := api.Group("/projects", middleware.AuthMiddleware())
 		{
-
 			projectGroup.POST("/", projectHandler.CreateProject)
-
 			projectGroup.GET("/", projectHandler.GetProjectsByCompany)
+			projectGroup.GET("/:projectID", projectHandler.GetProjectByID)
+		}
+	}
+}
 
-			projectGroup.GET("/:id", projectHandler.GetProjectByID)
+func SetupCriteriaRoutes(r *gin.Engine, criteriaHandler handler.CriteriaHandler) {
+	api := r.Group("/api/v1")
+	{
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+			projectGroup.POST("/criteria", criteriaHandler.CreateCriteria)
+			projectGroup.GET("/criteria", criteriaHandler.GetCriteriaByProject)
+		}
+	}
+}
 
+func SetupAlternativeRoutes(r *gin.Engine, alternativeHandler handler.AlternativeHandler) {
+	api := r.Group("/api/v1")
+	{
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+			projectGroup.POST("/alternatives", alternativeHandler.CreateAlternative)
+			projectGroup.GET("/alternatives", alternativeHandler.GetAlternativeByProject)
 		}
 	}
 }

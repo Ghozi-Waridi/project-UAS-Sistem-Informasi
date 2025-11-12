@@ -76,7 +76,7 @@ func (h *projectHandler) CreateProject(c *gin.Context) {
 
 func (h *projectHandler) GetProjectByID(c *gin.Context) {
 
-	projectIDStr := c.Param("id")
+	projectIDStr := c.Param("projectID")
 	projectID, err := strconv.ParseUint(projectIDStr, 10, 32)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID format"})
