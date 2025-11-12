@@ -16,7 +16,7 @@ func toAlternativeDTO(alt *models.Alternative) models.AlternativeDTO {
 }
 
 type AlternativeService interface {
-	CreateAlternative(input models.Alternative, projectID uint, companyID uint, role string) (*models.AlternativeDTO, error)
+	CreateAlternative(input models.CreateAlternativeInput, projectID uint, companyID uint, role string) (*models.AlternativeDTO, error)
 	GetAlternativeByProject(projectID uint, companyID uint) ([]models.AlternativeDTO, error)
 }
 
