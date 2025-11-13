@@ -96,3 +96,14 @@ type ProjectDMDTO struct {
 	Method      string  `json:"method"`
 	GroupWeight float64 `json:"group_weight"`
 }
+
+type PairwiseInputItem struct {
+	Cirteria1ID     uint    `json:"criteria_1_id" bidnign:"required"`
+	Cirteria2ID     uint    `json:"criteria_2_id" biding:"required"`
+	PrentCriteriaID *uint   `json:"parent_criteria_id"`
+	Value           float64 `json:"value" binding:"required,gt=0"`
+}
+
+type SumbitPairwiseInput struct {
+	Comparisons []PairwiseInputItem `json:"comparisons" binding:"required,dive"`
+}
