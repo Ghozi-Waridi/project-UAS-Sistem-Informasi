@@ -36,7 +36,9 @@ func (r *projectDMRepository) GetAssignmentsByProjectID(projectID uint) ([]model
 func (r *projectDMRepository) CheckAssignmentExists(projectID uint, dmUserID uint) (bool, error) {
 	var count int64
 
-	err := r.db.Model(&models.ProjectDecisionMaker{}).Where("project_id = ?", projectID, dmUserID).Count(&count).Error
+	err := r.db.Model(&models.ProjectDecisionMaker{}).
+		Where("project_id = ? AND dm_user_id = ?", projectID, dmUserID).
+		Count(&count).Error
 	if err != nil {
 		return false, err
 	}

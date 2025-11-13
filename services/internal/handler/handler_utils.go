@@ -15,7 +15,7 @@ func extractUserData(c *gin.Context) (uint, uint, string, error) {
 	}
 	companyID, ok := c.Get("companyID")
 	if !ok {
-		return 0, 0, "", errors.New("companyID not found in context")
+		return 0, 0, "", errors.New("acompanyID not found in context")
 	}
 	role, ok := c.Get("role")
 	if !ok {

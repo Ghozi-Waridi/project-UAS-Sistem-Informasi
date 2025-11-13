@@ -18,7 +18,18 @@ type LoginResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`
 }
-
+type CreateDMInput struct {
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required,min=6"`
+}
+type UserDTO struct {
+	UserID    uint   `json:"user_id"`
+	CompanyID uint   `json:"company_id"`
+	Email     string `json:"email"`
+	Name      string `json:"name"`
+	Role      string `json:"role"`
+}
 type UserProfile struct {
 	UserID      uint   `json:"user_id" binding:"required"`
 	CompanyName string `json:"company_name"`

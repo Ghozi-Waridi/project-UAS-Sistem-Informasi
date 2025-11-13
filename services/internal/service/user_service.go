@@ -4,10 +4,24 @@ import (
 	"errors"
 	"services/internal/models"
 	"services/internal/repository"
+
+	"golang.org/x/crypto/bcrypt"
+	"gorm.io/gorm"
 )
+
+func toUserDTO(user *models.User) models.UserDTO {
+	return models.UserDTO{
+		UserID:    user.UserID,
+		CompanyID: user.CompanyID,
+		Email:     user.Email,
+		Name:      user.Name,
+		Role:      user.Role,
+	}
+}
 
 type UserService interface {
 	GetUserByID(id uint) (*models.UserProfile, error)
+	CreateDM(input models.CreateDMInput, adminCompanyID uint) (*models.UserDTO, error)
 }
 
 type userService struct {
@@ -36,4 +50,36 @@ func (s *userService) GetUserByID(id uint) (*models.UserProfile, error) {
 		Role:        user.Role,
 	}
 	return &response, nil
+}
+
+func (s *userService) CreateDM(input models.CreateDMInput, adminCompanyID uint) (*models.UserDTO, error) {
+	// 1. Cek duplikat email
+	_, err := s.userRepo.FindByEmail(input.Email)
+	if err == nil || err != gorm.ErrRecordNotFound {
+		return nil, errors.New("email already exists")
+	}
+
+	// 2. Hash password
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return nil, err
+	}
+
+	// 3. Buat model User baru
+	newUser := models.User{
+		Name:         input.Name,
+		Email:        input.Email,
+		PasswordHash: string(hashedPassword),
+		Role:         "dm",           // <-- PENTING: Role di-set ke "dm"
+		CompanyID:    adminCompanyID, // <-- PENTING: CompanyID dari token Admin
+	}
+
+	// 4. Simpan ke database
+	if err := s.userRepo.CreateUser(&newUser); err != nil {
+		return nil, err
+	}
+
+	// 5. Kembalikan sebagai DTO yang aman
+	userDTO := toUserDTO(&newUser)
+	return &userDTO, nil
 }

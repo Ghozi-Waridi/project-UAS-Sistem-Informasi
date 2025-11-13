@@ -23,6 +23,7 @@ func SetupUserRoutes(r *gin.Engine, userHandler handler.Userhandler) {
 	{
 		userGroup := api.Group("/users", middleware.AuthMiddleware())
 		{
+			userGroup.POST("/", userHandler.CreateDM)
 			userGroup.GET("/:id", userHandler.GetUserProfile)
 		}
 	}
@@ -64,16 +65,15 @@ func SetupAlternativeRoutes(r *gin.Engine, alternativeHandler handler.Alternativ
 }
 
 func SetupProjectDMRoutes(r *gin.Engine, projectDMHandler handler.ProjectDMHandler) {
-	// Grup /api/v1 (sudah ada)
+
 	api := r.Group("/api/v1")
 	{
-		// Grup /projects/:projectID (sudah ada & sudah diproteksi middleware)
+
 		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
 		{
-			// POST /api/v1/projects/:projectID/assign-dm
+
 			projectGroup.POST("/assign-dm", projectDMHandler.AssignDM)
 
-			// GET /api/v1/projects/:projectID/decision-makers
 			projectGroup.GET("/decision-makers", projectDMHandler.GetAssignmentsByProject)
 		}
 	}
