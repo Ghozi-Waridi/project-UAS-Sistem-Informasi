@@ -23,6 +23,7 @@ func SetupUserRoutes(r *gin.Engine, userHandler handler.Userhandler) {
 	{
 		userGroup := api.Group("/users", middleware.AuthMiddleware())
 		{
+			userGroup.POST("/", userHandler.CreateDM)
 			userGroup.GET("/:id", userHandler.GetUserProfile)
 		}
 	}
@@ -59,6 +60,47 @@ func SetupAlternativeRoutes(r *gin.Engine, alternativeHandler handler.Alternativ
 		{
 			projectGroup.POST("/alternatives", alternativeHandler.CreateAlternative)
 			projectGroup.GET("/alternatives", alternativeHandler.GetAlternativeByProject)
+		}
+	}
+}
+
+func SetupProjectDMRoutes(r *gin.Engine, projectDMHandler handler.ProjectDMHandler) {
+
+	api := r.Group("/api/v1")
+	{
+
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/assign-dm", projectDMHandler.AssignDM)
+
+			projectGroup.GET("/decision-makers", projectDMHandler.GetAssignmentsByProject)
+		}
+	}
+}
+
+func SetupInputPairwiseRoutes(r *gin.Engine, pairwiseHandler handler.InputHandlerPairwise) {
+	api := r.Group("/api/v1")
+	{
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+			projectGroup.POST("/pairwise", pairwiseHandler.SubmitPairwise)
+			projectGroup.GET("/pairwise", pairwiseHandler.GetPairwiseSubmissions)
+		}
+	}
+}
+
+func SetupInputDirectWeightRoutes(r *gin.Engine, directWeightHandler handler.InputDirectWeightHandler) {
+
+	api := r.Group("/api/v1")
+	{
+
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/direct-weights", directWeightHandler.SubmitDirectWeights)
+
+			projectGroup.GET("/direct-weights", directWeightHandler.GetDirectWeights)
 		}
 	}
 }

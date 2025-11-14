@@ -4,7 +4,6 @@ import (
 	"net/http"
 	"services/internal/models"
 	"services/internal/service"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 )
@@ -23,15 +22,6 @@ func NewCriteriaHandler(criteriaService service.CriteriaService) CriteriaHandler
 	}
 }
 
-func getProjectIDFromParam(c *gin.Context) (uint, error) {
-	projectIDStr := c.Param("projectID")
-	projectID, err := strconv.ParseUint(projectIDStr, 10, 32)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID format"})
-		return 0, err
-	}
-	return uint(projectID), nil
-}
 func (h *criteriaHandler) CreateCriteria(c *gin.Context) {
 	var input models.CreateCriteriaInput
 	if err := c.ShouldBindJSON(&input); err != nil {

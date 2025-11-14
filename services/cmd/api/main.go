@@ -40,18 +40,27 @@ func main() {
 	projectRepository := repository.NewProjectRepository(db)
 	criteriarepository := repository.NewCriteriaRepository(db)
 	alternativeRepository := repository.NewALternativeRepository(db)
+	project_dm_repository := repository.NewProjectDMRepository(db)
+	inputPairwiseRepository := repository.NewInputPairwiseRepository(db)
+	inputDirectWeightRepository := repository.NewInputDirectWeigtrepository(db)
 
 	authService := service.NewAuthService(userReository)
 	userService := service.NewUserService(userReository)
 	projectService := service.NewProjectService(projectRepository)
 	criteriService := service.NewCriteriaService(criteriarepository, projectRepository)
 	alternativeService := service.NewAlternativeService(alternativeRepository, projectRepository)
+	projectDMService := service.NewProjectDMService(project_dm_repository, projectRepository, userReository)
+	inputPairwiseService := service.NewInputPairwiseService(inputPairwiseRepository, project_dm_repository)
+	inputDirectWeightService := service.NewInputDirectWeightService(inputDirectWeightRepository, project_dm_repository)
 
 	authHandler := handler.NewAuthHandler(authService)
 	userHandler := handler.NewUserHandler(userService)
 	projectHandler := handler.NewProjectHandler(projectService)
 	criteriHandler := handler.NewCriteriaHandler(criteriService)
 	alternativeHandler := handler.NewAlternativeHandler(alternativeService)
+	projectDMHandler := handler.NewProjectDMHandler(projectDMService)
+	inputPairwiseHandler := handler.NewInputHandlerPairwise(inputPairwiseService)
+	inputDirectWeightHandler := handler.NewInputDirectWeightHandler(inputDirectWeightService)
 
 	r := gin.Default()
 
@@ -60,6 +69,9 @@ func main() {
 	routes.SetupProjectRoutes(r, projectHandler)
 	routes.SetupCriteriaRoutes(r, criteriHandler)
 	routes.SetupAlternativeRoutes(r, alternativeHandler)
+	routes.SetupProjectDMRoutes(r, projectDMHandler)
+	routes.SetupInputPairwiseRoutes(r, inputPairwiseHandler)
+	routes.SetupInputDirectWeightRoutes(r, inputDirectWeightHandler)
 
 	log.Println("Starting server on port 8080....")
 	r.Run(":8080")
