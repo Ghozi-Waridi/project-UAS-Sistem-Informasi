@@ -89,3 +89,18 @@ func SetupInputPairwiseRoutes(r *gin.Engine, pairwiseHandler handler.InputHandle
 		}
 	}
 }
+
+func SetupInputDirectWeightRoutes(r *gin.Engine, directWeightHandler handler.InputDirectWeightHandler) {
+
+	api := r.Group("/api/v1")
+	{
+
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/direct-weights", directWeightHandler.SubmitDirectWeights)
+
+			projectGroup.GET("/direct-weights", directWeightHandler.GetDirectWeights)
+		}
+	}
+}
