@@ -107,3 +107,12 @@ type PairwiseInputItem struct {
 type SumbitPairwiseInput struct {
 	Comparisons []PairwiseInputItem `json:"comparisons" binding:"required,dive"`
 }
+
+type DirectWeightInputItem struct {
+	CriteriaID  uint    `json:"criteria_id" binding:"required"`
+	WeightValue float64 `json:"weight_value" binding:"required,gte=0,lte=1"`
+}
+
+type SubmitDirectionWeightInput struct {
+	Weights []DirectWeightInputItem `json:"weights" binding:"required,dive"`
+}
