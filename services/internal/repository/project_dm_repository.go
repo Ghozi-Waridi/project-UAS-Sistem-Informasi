@@ -10,6 +10,7 @@ type ProjectDMRepository interface {
 	AssignDM(assignment *models.ProjectDecisionMaker) error
 	GetAssignmentsByProjectID(projectID uint) ([]models.ProjectDecisionMaker, error)
 	CheckAssignmentExists(projectID uint, dmUserID uint) (bool, error)
+	GetAssignmentByProjectAndUser(projectID uint, dmUserID uint) (*models.ProjectDecisionMaker, error)
 }
 
 type projectDMRepository struct {
@@ -43,4 +44,17 @@ func (r *projectDMRepository) CheckAssignmentExists(projectID uint, dmUserID uin
 		return false, err
 	}
 	return count > 0, nil
+}
+
+func (r *projectDMRepository) GetAssignmentByProjectAndUser(projectID uint, dmUserID uint) (*models.ProjectDecisionMaker, error) {
+	var assignment models.ProjectDecisionMaker
+
+	// Cari satu record yang cocok dengan kedua ID
+	err := r.db.Where("project_id = ? AND dm_user_id = ?", projectID, dmUserID).First(&assignment).Error
+
+	if err != nil {
+		return nil, err // Akan error 'record not found' jika tidak ada
+	}
+
+	return &assignment, nil
 }
