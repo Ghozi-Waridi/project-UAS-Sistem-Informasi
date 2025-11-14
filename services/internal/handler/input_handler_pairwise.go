@@ -38,7 +38,7 @@ func (h *inputHandlerPairwise) SubmitPairwise(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user data"})
 		return
 	}
-	err := h.pairwiseService.SubmitPairwise(input, projectID, dmUserID)
+	err = h.pairwiseService.SubmitPairwise(input, projectID, dmUserID)
 	if err != nil {
 		if err.Error() == "user is not an assigned decission maker for this project" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})

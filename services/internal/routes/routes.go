@@ -78,3 +78,14 @@ func SetupProjectDMRoutes(r *gin.Engine, projectDMHandler handler.ProjectDMHandl
 		}
 	}
 }
+
+func SetupInputPairwiseRoutes(r *gin.Engine, pairwiseHandler handler.InputHandlerPairwise) {
+	api := r.Group("/api/v1")
+	{
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+			projectGroup.POST("/pairwise", pairwiseHandler.SubmitPairwise)
+			projectGroup.GET("/pairwise", pairwiseHandler.GetPairwiseSubmissions)
+		}
+	}
+}
