@@ -1,6 +1,8 @@
 package models
 
-import "time"
+import (
+	"time"
+)
 
 type RegisterInput struct {
 	Name        string `json:"name" binding:"required"`
@@ -114,4 +116,14 @@ type DirectWeightInputItem struct {
 
 type SubmitDirectWeightsInput struct {
 	Weights []DirectWeightInputItem `json:"weights" binding:"required,dive"`
+}
+
+type ScoteInputItem struct {
+	AlternativeID uint    `json:"alternative_id" binding:"requred"`
+	CriteriaID    uint    `json:"criteria_id" bindign:"required"`
+	ScoreValue    float64 `json:"score_value" binding:"required,gte=0"`
+}
+
+type SubmitScioreInput struct {
+	Scores []SubmitScioreInput `json:"scores" binding:""required,dive"`
 }
