@@ -104,3 +104,16 @@ func SetupInputDirectWeightRoutes(r *gin.Engine, directWeightHandler handler.Inp
 		}
 	}
 }
+
+func SetupInputScoreRoutes(r *gin.Engine, scoreHandler handler.InputScoreHandler) {
+	api := r.Group("/api/v1")
+	{
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/scores", scoreHandler.SubmitScores)
+
+			projectGroup.GET("/scores", scoreHandler.GetScores)
+		}
+	}
+}
