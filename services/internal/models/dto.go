@@ -125,5 +125,5 @@ type ScoteInputItem struct {
 }
 
 type SubmitScioreInput struct {
-	Scores []SubmitScioreInput `json:"scores" binding:""required,dive"`
+	Scores []ScoteInputItem `json:"scores" binding:""required,dive"`
 }
