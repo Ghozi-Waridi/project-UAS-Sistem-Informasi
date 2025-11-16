@@ -117,3 +117,16 @@ func SetupInputScoreRoutes(r *gin.Engine, scoreHandler handler.InputScoreHandler
 		}
 	}
 }
+
+func SetupDecisionRoutes(r *gin.Engine, decisionHandler handler.DecisionHandler) {
+	api := r.Group("/api/v1")
+	{
+		projectGroup := api.Group("/projects/:projectID", middleware.AuthMiddleware())
+		{
+
+			projectGroup.POST("/calculate", decisionHandler.TriggerCalculation)
+
+			projectGroup.GET("/results", decisionHandler.GetResults)
+		}
+	}
+}
