@@ -4,21 +4,22 @@ import { Link, useNavigate } from "react-router-dom";
 export default function Login() {
   const [userType, setUserType] = useState("decision-maker"); // "admin" | "decision-maker"
   const isAdmin = userType === "admin";
-
   const navigate = useNavigate();
 
   const handleSubmit = (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    // Logika redirect sederhana
-    if (isAdmin) {
-      // Jika memilih Admin → ke Dashboard Admin
-      navigate("/dashboard-admin");
-    } else {
-      // Jika memilih Decision Maker → ke Beranda (atau halaman lain kalau mau)
-      navigate("/beranda");
-    }
-  };
+  console.log("Login sebagai:", userType);
+
+  if (isAdmin) {
+    // ⬅️ ADMIN MASUK KE BERANDA
+    navigate("/beranda");
+  } else {
+    // DECISION MAKER tetap ke halaman DM
+    navigate("/decision-maker");
+  }
+};
+
 
   return (
     <div className="min-h-screen bg-soft flex items-center justify-center px-4">
@@ -108,7 +109,7 @@ export default function Login() {
               </div>
             </div>
 
-            {/* Lupa password & remember (opsional) */}
+            {/* Ingat saya & lupa password */}
             <div className="flex items-center justify-between text-xs">
               <label className="flex items-center gap-2 text-gray-500">
                 <input

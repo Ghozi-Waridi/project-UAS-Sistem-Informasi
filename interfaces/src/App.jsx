@@ -4,7 +4,7 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import TopNav from "./admin/components/TopNav";
 
 import Beranda from "./admin/pages/Beranda";
-import DashboardAdmin from "./admin/pages/DashboardAdmin";
+import Dashboard from "./admin/pages/Dashboard";
 import DecisionMaker from "./admin/pages/DecisionMaker";
 import Kandidat from "./admin/pages/Kandidat";
 import Hasil from "./admin/pages/Hasil";
@@ -41,7 +41,7 @@ export default function App() {
 
           {/* Admin pages */}
           <Route path="/beranda" element={<Beranda />} />
-          <Route path="/dashboard-admin" element={<DashboardAdmin />} />
+          <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/decision-maker" element={<DecisionMaker />} />
           <Route path="/kandidat" element={<Kandidat />} />
           <Route path="/hasil" element={<Hasil />} />

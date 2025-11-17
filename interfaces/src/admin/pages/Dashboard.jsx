@@ -122,10 +122,15 @@ export default function Beranda() {
       </section>
 
       {/* Bottom section: evaluation table + activity */}
-      <section className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5">
+            {/* Bottom section: evaluation table + activity */}
+      <section
+        id="evaluation-section"
+        className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5"
+      >
         <EvaluationTable />
         <ActivityList />
       </section>
+
     </div>
   );
 }
