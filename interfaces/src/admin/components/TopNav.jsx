@@ -3,7 +3,7 @@ import { NavLink, useNavigate } from 'react-router-dom';
 
 const navLinks = [
   { to: '/beranda', label: 'Beranda' },
-  { to: '/dashboard-admin', label: 'Dashboard Admin' },
+  { to: '/dashboard', label: 'Dashboard' },
   { to: '/decision-maker', label: 'Decision Maker' },
   { to: '/kandidat', label: 'Kandidat' },
   { to: '/hasil', label: 'Hasil' },
