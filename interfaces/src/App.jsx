@@ -1,35 +1,53 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import React from "react";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 
-function App() {
-  const [count, setCount] = useState(0)
+import TopNav from "./admin/components/TopNav";
+
+import Beranda from "./admin/pages/Beranda";
+import DashboardAdmin from "./admin/pages/DashboardAdmin";
+import DecisionMaker from "./admin/pages/DecisionMaker";
+import Kandidat from "./admin/pages/Kandidat";
+import Hasil from "./admin/pages/Hasil";
+
+// Auth pages
+import Login from "./admin/pages/Login";
+import Register from "./admin/pages/Register";
+
+export default function App() {
+  const location = useLocation();
+
+  // Hide navbar on login & register pages
+  const hideNavbar =
+    location.pathname === "/login" ||
+    location.pathname === "/register";
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.jsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
-}
+    <div className="min-h-screen bg-soft">
 
-export default App
+      {/* Navbar hanya tampil jika BUKAN di login/register */}
+      {!hideNavbar && <TopNav />}
+
+      <main
+        className={`${!hideNavbar ? "pt-32" : "pt-6"} max-w-6xl mx-auto pb-12 px-4`}
+      >
+        <Routes>
+
+          {/* Auth */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* Default redirect */}
+          <Route path="/" element={<Navigate to="/login" replace />} />
+
+          {/* Admin pages */}
+          <Route path="/beranda" element={<Beranda />} />
+          <Route path="/dashboard-admin" element={<DashboardAdmin />} />
+          <Route path="/decision-maker" element={<DecisionMaker />} />
+          <Route path="/kandidat" element={<Kandidat />} />
+          <Route path="/hasil" element={<Hasil />} />
+
+        </Routes>
+      </main>
+    </div>
+  );
+}
