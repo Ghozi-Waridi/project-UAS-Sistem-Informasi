@@ -42,8 +42,15 @@ type UserProfile struct {
 
 type CreateProjectInput struct {
 	ProjectName       string `json:"project_name" binding:"required"`
-	Descrtiptuin      string `json:"description"`
+	Description       string `json:"description"`
 	AggregationMethod string `json:"aggregation_method" binding:"required"`
+}
+
+type UpdateProjectInput struct {
+	ProjectName       string `json:"project_name"`
+	Description       string `json:"description"`
+	Status            string `json:"status"`
+	AggregationMethod string `json:"aggregation_method"`
 }
 
 type ProjectDTO struct {
@@ -64,6 +71,12 @@ type CreateCriteriaInput struct {
 	ParentCriteriaID *uint  `json:"parent_criteria_id"`
 }
 
+type UpdateCriteriaInput struct {
+	Name string `json:"name"`
+	Code string `json:"code"`
+	Type string `json:"type" binding:"omitempty,oneof=benefit cost"`
+}
+
 type CriteriaDTO struct {
 	CriteriaID       uint          `json:"criteria_id"`
 	ProjectID        uint          `json:"project_id"`
@@ -79,6 +92,11 @@ type CreateAlternativeInput struct {
 	Description string `json:"description"`
 }
 
+type UpdateAlternativeInput struct {
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
 type AlternativeDTO struct {
 	AlternativeID uint   `json:"alternative_id"`
 	ProjectID     uint   `json:"project_id"`
@@ -89,8 +107,14 @@ type AlternativeDTO struct {
 type AssignDMInput struct {
 	DMUserID    uint    `json:"dm_user_id" binding:"required"`
 	Method      string  `json:"method" binding:"required,oneof=AHP AHP_SAW TOPSIS DIRECT_WEIGHT"`
-	GroupWeight float64 `json:"group_weight" binding:"required,gte=0,lte=1"`
+	GroupWeight float64 `json:"group_weight" binding:"required,gte=0,lte=10"`
 }
+
+type UpdateProjectDMInput struct {
+	Method      string  `json:"method" binding:"required,oneof=AHP AHP_SAW TOPSIS DIRECT_WEIGHT"`
+	GroupWeight float64 `json:"group_weight" binding:"required,gte=0,lte=10"`
+}
+
 type ProjectDMDTO struct {
 	ProjectDMID uint    `json:"project_dm_id"`
 	ProjectID   uint    `json:"project_id"`
@@ -100,8 +124,8 @@ type ProjectDMDTO struct {
 }
 
 type PairwiseInputItem struct {
-	Cirteria1ID     uint    `json:"criteria_1_id" bidnign:"required"`
-	Cirteria2ID     uint    `json:"criteria_2_id" biding:"required"`
+	Cirteria1ID     uint    `json:"criteria_1_id" binding:"required"`
+	Cirteria2ID     uint    `json:"criteria_2_id" binding:"required"`
 	PrentCriteriaID *uint   `json:"parent_criteria_id"`
 	Value           float64 `json:"value" binding:"required,gt=0"`
 }
@@ -118,12 +142,12 @@ type SubmitDirectWeightsInput struct {
 	Weights []DirectWeightInputItem `json:"weights" binding:"required,dive"`
 }
 
-type ScoteInputItem struct {
-	AlternativeID uint    `json:"alternative_id" binding:"requred"`
-	CriteriaID    uint    `json:"criteria_id" bindign:"required"`
+type ScoreInputItem struct {
+	AlternativeID uint    `json:"alternative_id" binding:"required"`
+	CriteriaID    uint    `json:"criteria_id" binding:"required"`
 	ScoreValue    float64 `json:"score_value" binding:"required,gte=0"`
 }
 
-type SubmitScioreInput struct {
-	Scores []ScoteInputItem `json:"scores" binding:""required,dive"`
+type SubmitScoreInput struct {
+	Scores []ScoreInputItem `json:"scores" binding:"required,dive"`
 }

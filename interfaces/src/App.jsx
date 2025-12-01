@@ -1,8 +1,9 @@
 import React from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute";
 
+// Import Admin Components
 import TopNav from "./admin/components/TopNav";
-
 import Beranda from "./admin/pages/Beranda";
 import Dashboard from "./admin/pages/Dashboard";
 import DecisionMaker from "./admin/pages/DecisionMaker";
@@ -13,6 +14,17 @@ import Hasil from "./admin/pages/Hasil";
 import Login from "./admin/pages/Login";
 import Register from "./admin/pages/Register";
 
+// Import Decision Maker (DM) Components
+import DashboardDM from "./dm/DashboardDM";
+import KandidatList from "./dm/kandidateList";
+import KandidatForm from "./dm/KandidatForm";
+import KandidatDetail from "./dm/KandidatDetail";
+import PenilaianForm from "./dm/PenilaianForm";
+import HasilSeleksi from "./dm/HasilSeleksi";
+import SemuaEvaluasi from "./dm/SemuaEvaluasi";
+import DetailKonsensus from "./dm/DetailKonsensus";
+import KandidatCardStatic from "./dm/KandidatCardStatic";
+
 export default function App() {
   const location = useLocation();
 
@@ -21,6 +33,7 @@ export default function App() {
     location.pathname === "/login" ||
     location.pathname === "/register";
 
+
   return (
     <div className="min-h-screen bg-soft">
 
@@ -28,23 +41,51 @@ export default function App() {
       {!hideNavbar && <TopNav />}
 
       <main
-        className={`${!hideNavbar ? "pt-32" : "pt-6"} max-w-6xl mx-auto pb-12 px-4`}
+        className={
+          location.pathname === "/"
+            ? "w-full"
+            : `${!hideNavbar ? "pt-32" : "pt-6"} max-w-6xl mx-auto pb-12 px-4`
+        }
       >
         <Routes>
 
-          {/* Auth */}
+          {/* ========== AUTH ROUTES ========== */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* Default redirect */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          {/* Default route - Landing Page */}
+          <Route path="/" element={<Beranda />} />
 
-          {/* Admin pages */}
-          <Route path="/beranda" element={<Beranda />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/decision-maker" element={<DecisionMaker />} />
-          <Route path="/kandidat" element={<Kandidat />} />
-          <Route path="/hasil" element={<Hasil />} />
+          {/* ========== ADMIN ROUTES ========== */}
+          <Route element={<ProtectedRoute allowedRoles={['admin']} />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/decision-maker" element={<DecisionMaker />} />
+            <Route path="/kandidat" element={<Kandidat />} />
+            <Route path="/hasil" element={<Hasil />} />
+          </Route>
+
+          {/* ========== DECISION MAKER (DM) ROUTES ========== */}
+          <Route element={<ProtectedRoute allowedRoles={['dm']} />}>
+            {/* Dashboard DM */}
+            <Route path="/dm/dashboard" element={<DashboardDM />} />
+
+            {/* Kandidat Management (Admin Feature - Hidden for DM MVP) */}
+            {/* <Route path="/dm/kandidat" element={<KandidatList />} />
+            <Route path="/dm/kandidat/tambah" element={<KandidatForm />} />
+            <Route path="/dm/kandidat/:id" element={<KandidatDetail />} />
+            <Route path="/dm/kandidat-card-static" element={<KandidatCardStatic />} /> */}
+
+            {/* Evaluasi/Penilaian */}
+            <Route path="/dm/penilaian/:projectId/:kandidatId" element={<PenilaianForm />} />
+            {/* <Route path="/dm/evaluasi-semua" element={<SemuaEvaluasi />} /> */}
+
+            {/* Hasil dan Konsensus */}
+            <Route path="/dm/hasil" element={<HasilSeleksi />} />
+            {/* <Route path="/dm/konsensus-detail" element={<DetailKonsensus />} /> */}
+          </Route>
+
+          {/* Catch all - redirect to login */}
+          <Route path="*" element={<Navigate to="/login" replace />} />
 
         </Routes>
       </main>
@@ -54,120 +95,3 @@ export default function App() {
 
 
 
-
-
-// import React from "react";
-// import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-
-// // Import komponen Admin
-// import TopNav from "./admin/components/TopNav";
-// import Beranda from "./admin/pages/Beranda";
-// import DashboardAdmin from "./admin/pages/DashboardAdmin";
-// import DecisionMaker from "./admin/pages/DecisionMaker"; // Ini akan jadi layout untuk rute DM
-// import Kandidat from "./admin/pages/Kandidat";
-// import Hasil from "./admin/pages/Hasil";
-// import Login from "./admin/pages/Login";
-// import Register from "./admin/pages/Register";
-
-// // Import komponen Decision Maker (DM)
-// import DashboardDM from "./dm/DashboardDM";
-// import KandidatList from "./dm/kandidateList"; // Perhatikan penulisan 'kandidateList'
-// import KandidatForm from "./dm/KandidatForm";
-// import PenilaianForm from "./dm/PenilaianForm";
-// import HasilSeleksi from "./dm/HasilSeleksi";
-// import SemuaEvaluasi from "./dm/SemuaEvaluasi";
-// import DetailKonsensus from "./dm/DetailKonsensus";
-// import KandidatCardStatic from "./dm/KandidatCardStatic";
-
-// export default function App() {
-//   const location = useLocation();
-
-//   // Hide navbar on login & register pages
-//   const hideNavbar =
-//     location.pathname === "/login" ||
-//     location.pathname === "/register";
-
-//   return (
-//     <div className="min-h-screen bg-soft">
-//       {/* Navbar hanya tampil jika BUKAN di login/register */}
-//       {!hideNavbar && <TopNav />}
-
-//       <main
-//         className={`${!hideNavbar ? "pt-32" : "pt-6"} max-w-6xl mx-auto pb-12 px-4`}
-//       >
-//         <Routes>
-
-//           {/* ------------------------------------- */}
-//           {/* RUTE OTENTIKASI             */}
-//           {/* ------------------------------------- */}
-//           <Route path="/login" element={<Login />} />
-//           <Route path="/register" element={<Register />} />
-
-//           {/* Default redirect: '/' akan mengarahkan ke '/login' */}
-//           <Route path="/" element={<Navigate to="/login" replace />} />
-
-//           {/* ------------------------------------- */}
-//           {/* RUTE ADMIN                */}
-//           {/* ------------------------------------- */}
-//           <Route path="/beranda" element={<Beranda />} />
-//           <Route path="/dashboard-admin" element={<DashboardAdmin />} />
-//           <Route path="/kandidat" element={<Kandidat />} />
-//           <Route path="/hasil" element={<Hasil />} />
-
-//           {/* Catatan: Rute "/decision-maker" sudah ada di sini,
-//               kita akan menggunakannya sebagai jalur utama/layout
-//               untuk semua sub-rute DM. */}
-//           <Route path="/decision-maker" element={<DecisionMaker />} />
-
-//           {/* ------------------------------------- */}
-//           {/* RUTE DECISION MAKER (DM)     */}
-//           {/* Menggunakan NESTED ROUTES    */}
-//           {/* ------------------------------------- */}
-//           {/*
-//             Kita membuat rute induk di /dm yang menggunakan DecisionMaker
-//             sebagai layout (jika DecisionMaker berisi layout/navbar DM).
-//             Jika tidak, kita langsung gunakan sub-rute /dm/path.
-            
-//             Berdasarkan kode Anda, saya akan membuat DecisionMaker
-//             sebagai layout yang menampung semua rute DM di dalamnya.
-//           */}
-//           <Route path="/dm" element={<DecisionMaker />}>
-
-//             {/* Rute Default DM, Redirect ke /dm/dashboard */}
-//             <Route index element={<Navigate to="dashboard" replace />} />
-
-//             <Route path="dashboard" element={<DashboardDM />} />
-
-//             {/* Manajemen Kandidat */}
-//             <Route path="kandidat" element={<KandidatList />} />
-//             <Route path="kandidat/tambah" element={<KandidatForm />} />
-
-//             {/* Evaluasi/Penilaian */}
-//             <Route path="penilaian/:kandidatId" element={<PenilaianForm />} />
-//             <Route path="evaluasi-semua" element={<SemuaEvaluasi />} />
-
-//             {/* Hasil dan Konsensus */}
-//             <Route path="hasil" element={<HasilSeleksi />} />
-//             <Route path="konsensus-detail" element={<DetailKonsensus />} />
-
-//             {/* Rute Tambahan */}
-//             <Route path="kandidate-card-static" element={<KandidatCardStatic />} />
-
-//           </Route>
-
-//           {/* Catatan: Ada juga rute Admin "/decision-maker".
-//              Jika DecisionMaker (admin page) sama dengan layout DM,
-//              rute di atas bisa diganti menjadi:
-//              <Route path="/decision-maker" element={<DecisionMaker />}>
-//                  ... semua rute DM ...
-//              </Route>
-             
-//              Saya asumsikan Anda ingin menggunakan DecisionMaker sebagai layout
-//              atau halaman utama Decision Maker.
-//           */}
-
-//         </Routes>
-//       </main>
-//     </div>
-//   );
-// }

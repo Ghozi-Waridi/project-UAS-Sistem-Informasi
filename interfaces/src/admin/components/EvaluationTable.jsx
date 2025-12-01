@@ -1,52 +1,6 @@
 import React, { useMemo, useState } from "react";
 
-const rows = [
-  {
-    id: "EV001",
-    kandidat: "Ahmad Rizki",
-    posisi: "Frontend Developer",
-    evaluator: "Decision Maker 1",
-    status: "Selesai",
-    statusColor: "bg-green-100 text-green-600",
-    skor: "8.5/10",
-  },
-  {
-    id: "EV002",
-    kandidat: "Sari Dewi",
-    posisi: "Backend Developer",
-    evaluator: "Decision Maker 2",
-    status: "Berlangsung",
-    statusColor: "bg-blue-100 text-blue-600",
-    skor: "-",
-  },
-  {
-    id: "EV003",
-    kandidat: "Budi Santoso",
-    posisi: "Full Stack Developer",
-    evaluator: "Decision Maker 3",
-    status: "Selesai",
-    statusColor: "bg-green-100 text-green-600",
-    skor: "9.2/10",
-  },
-  {
-    id: "EV004",
-    kandidat: "Maya Indira",
-    posisi: "Mobile Developer",
-    evaluator: "Decision Maker 1",
-    status: "Menunggu",
-    statusColor: "bg-yellow-100 text-yellow-600",
-    skor: "-",
-  },
-  {
-    id: "EV005",
-    kandidat: "Rudi Hermawan",
-    posisi: "DevOps Engineer",
-    evaluator: "Decision Maker 2",
-    status: "Selesai",
-    statusColor: "bg-green-100 text-green-600",
-    skor: "7.8/10",
-  },
-];
+
 
 const EVALUATION_CRITERIA = [
   {
@@ -81,7 +35,7 @@ const EVALUATION_CRITERIA = [
   },
 ];
 
-export default function EvaluationTable() {
+export default function EvaluationTable({ candidates = [] }) {
   const [isEvaluationOpen, setIsEvaluationOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState(null);
   const [scores, setScores] = useState({
@@ -122,15 +76,40 @@ export default function EvaluationTable() {
     setScores((prev) => ({ ...prev, [key]: value }));
   };
 
+  // Map candidates to rows
+  const displayRows = candidates.map(c => {
+    let details = {};
+    try {
+      const parsed = JSON.parse(c.description || "{}");
+      if (typeof parsed === 'string') {
+        details = JSON.parse(parsed);
+      } else {
+        details = parsed;
+      }
+    } catch (e) {
+      details = { note: c.description };
+    }
+
+    return {
+      id: c.alternative_id || c.id,
+      kandidat: c.name,
+      posisi: details.experience ? `${details.experience} - ${details.education || ''}` : (details.note || "-"),
+      evaluator: "-", // Placeholder
+      status: "Menunggu", // Placeholder
+      statusColor: "bg-gray-100 text-gray-600",
+      skor: "-", // Placeholder
+    };
+  });
+
   return (
     <>
       {/* Card daftar evaluasi */}
       <div className="bg-white rounded-3xl shadow-card px-6 py-5 flex flex-col gap-4">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="font-semibold text-gray-800">Evaluasi Terbaru</h3>
+            <h3 className="font-semibold text-gray-800">Daftar Kandidat</h3>
             <p className="text-[11px] text-gray-400 mt-1">
-              Klik baris untuk membuka form evaluasi
+              Klik baris untuk melihat detail
             </p>
           </div>
           <button className="text-xs text-blue-600 font-semibold">
@@ -143,52 +122,60 @@ export default function EvaluationTable() {
             <thead>
               <tr className="text-gray-400 text-xs border-b">
                 <th className="py-2 text-left">Kandidat</th>
-                <th className="py-2 text-left">Posisi</th>
+                <th className="py-2 text-left">Deskripsi</th>
                 <th className="py-2 text-left">Evaluator</th>
                 <th className="py-2 text-left">Status</th>
                 <th className="py-2 text-right">Skor</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((row) => (
-                <tr
-                  key={row.id}
-                  className="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
-                  onClick={() => openEvaluation(row)}
-                >
-                  <td className="py-3">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-semibold">
-                        {row.kandidat
-                          .split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .slice(0, 2)}
-                      </div>
-                      <div>
-                        <div className="font-semibold text-gray-800 text-sm">
-                          {row.kandidat}
+              {displayRows.length > 0 ? (
+                displayRows.map((row) => (
+                  <tr
+                    key={row.id}
+                    className="border-b last:border-0 hover:bg-gray-50 cursor-pointer"
+                    onClick={() => openEvaluation(row)}
+                  >
+                    <td className="py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs flex items-center justify-center font-semibold">
+                          {row.kandidat
+                            .split(" ")
+                            .map((n) => n[0])
+                            .join("")
+                            .slice(0, 2)}
                         </div>
-                        <div className="text-xs text-gray-400">{row.id}</div>
+                        <div>
+                          <div className="font-semibold text-gray-800 text-sm">
+                            {row.kandidat}
+                          </div>
+                          <div className="text-xs text-gray-400">#{row.id}</div>
+                        </div>
                       </div>
-                    </div>
-                  </td>
-                  <td className="py-3 text-sm text-gray-600">{row.posisi}</td>
-                  <td className="py-3 text-sm text-gray-600">
-                    {row.evaluator}
-                  </td>
-                  <td className="py-3">
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs font-semibold ${row.statusColor}`}
-                    >
-                      {row.status}
-                    </span>
-                  </td>
-                  <td className="py-3 text-right font-semibold text-gray-800">
-                    {row.skor}
+                    </td>
+                    <td className="py-3 text-sm text-gray-600">{row.posisi}</td>
+                    <td className="py-3 text-sm text-gray-600">
+                      {row.evaluator}
+                    </td>
+                    <td className="py-3">
+                      <span
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${row.statusColor}`}
+                      >
+                        {row.status}
+                      </span>
+                    </td>
+                    <td className="py-3 text-right font-semibold text-gray-800">
+                      {row.skor}
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="5" className="py-4 text-center text-gray-500">
+                    Belum ada kandidat di project ini.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>
@@ -301,10 +288,9 @@ export default function EvaluationTable() {
                                   type="button"
                                   onClick={() => setScore(crit.key, val)}
                                   className={`w-8 h-8 rounded-full border text-xs font-medium flex items-center justify-center transition
-                                    ${
-                                      active
-                                        ? "border-blue-500 bg-blue-500 text-white shadow"
-                                        : "border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600"
+                                    ${active
+                                      ? "border-blue-500 bg-blue-500 text-white shadow"
+                                      : "border-gray-300 text-gray-600 hover:border-blue-400 hover:text-blue-600"
                                     }`}
                                 >
                                   {val}

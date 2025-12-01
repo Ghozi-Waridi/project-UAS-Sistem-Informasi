@@ -23,6 +23,9 @@ type ProjectService interface {
 	CreateProject(input models.CreateProjectInput, adminID uint, companyID uint) (*models.ProjectDTO, error)
 	GetProjectByID(projectID uint, companyID uint) (*models.ProjectDTO, error)
 	GetProjectsByCompany(companyID uint) ([]models.ProjectDTO, error)
+	UpdateProject(projectID uint, input models.UpdateProjectInput, companyID uint) (*models.ProjectDTO, error)
+	DeleteProject(projectID uint, companyID uint) error
+	GetAssignedProjects(userID uint) ([]models.ProjectDTO, error)
 }
 
 type projectService struct {
@@ -39,7 +42,7 @@ func (s *projectService) CreateProject(input models.CreateProjectInput, adminID 
 
 	newProject := models.DecisionProject{
 		ProjectName:       input.ProjectName,
-		Description:       input.Descrtiptuin,
+		Description:       input.Description,
 		AggregationMethod: input.AggregationMethod,
 		CompanyID:         companyID,
 		CreatedByAdminID:  adminID,
@@ -74,9 +77,58 @@ func (s *projectService) GetProjectsByCompany(companyID uint) ([]models.ProjectD
 		return nil, err
 	}
 
-	var projectDTOs []models.ProjectDTO
+	// Initialize as empty array instead of nil
+	projectDTOs := make([]models.ProjectDTO, 0)
 	for _, project := range projects {
 
+		dto := toProjectDTO(&project)
+		projectDTOs = append(projectDTOs, dto)
+	}
+
+	return projectDTOs, nil
+}
+
+func (s *projectService) UpdateProject(projectID uint, input models.UpdateProjectInput, companyID uint) (*models.ProjectDTO, error) {
+	project, err := s.projectRepo.GetProjectByID(projectID, companyID)
+	if err != nil {
+		return nil, err
+	}
+
+	if input.ProjectName != "" {
+		project.ProjectName = input.ProjectName
+	}
+	if input.Description != "" {
+		project.Description = input.Description
+	}
+	if input.Status != "" {
+		project.Status = input.Status
+	}
+	if input.AggregationMethod != "" {
+		project.AggregationMethod = input.AggregationMethod
+	}
+
+	err = s.projectRepo.UpdateProject(project)
+	if err != nil {
+		return nil, err
+	}
+
+	projectDTO := toProjectDTO(project)
+	return &projectDTO, nil
+}
+
+func (s *projectService) DeleteProject(projectID uint, companyID uint) error {
+	return s.projectRepo.DeleteProject(projectID, companyID)
+}
+
+func (s *projectService) GetAssignedProjects(userID uint) ([]models.ProjectDTO, error) {
+	projects, err := s.projectRepo.GetProjectsByDM(userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Initialize as empty array instead of nil
+	projectDTOs := make([]models.ProjectDTO, 0)
+	for _, project := range projects {
 		dto := toProjectDTO(&project)
 		projectDTOs = append(projectDTOs, dto)
 	}

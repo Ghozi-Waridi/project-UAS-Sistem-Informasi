@@ -6,10 +6,6 @@ import {
     BsClock,
     BsStar,
     BsPersonCircle,
-    BsEye,
-    BsCheckCircleFill,
-    BsClockFill,
-    BsPeopleFill,
 } from "react-icons/bs";
 import {
     FaFilter,
@@ -22,109 +18,8 @@ import {
     FaChevronDown,
     FaCheck,
 } from "react-icons/fa";
-
-// Data dummy (TIDAK ADA PERUBAHAN DI BAGIAN DATA DUMMY)
-const dummyEvaluasiTerbaru = [
-    {
-        id: 1,
-        nama: "Maya Indra Sari",
-        waktu: "2 jam lalu",
-        skor: "9/10",
-        statusColor: "text-green-600",
-    },
-    {
-        id: 2,
-        nama: "Sari Dewi Lestari",
-        waktu: "1 hari lalu",
-        skor: "8.5/10",
-        statusColor: "text-green-600",
-    },
-    {
-        id: 3,
-        nama: "Rudi Hermawan",
-        waktu: "2 hari lalu",
-        skor: "7.2/10",
-        statusColor: "text-green-600",
-    },
-];
-
-const dummyStatusEvaluator = [
-    {
-        id: 1,
-        nama: "Decision Maker 1 (Anda)",
-        status: "Selesai",
-        progress: 67,
-        progressText: "8/12 kandidat",
-        icon: "check",
-    },
-    {
-        id: 2,
-        nama: "Decision Maker 2",
-        status: "Selesai",
-        progress: 100,
-        progressText: "12/12 kandidat",
-        icon: "check",
-    },
-    {
-        id: 3,
-        nama: "Decision Maker 3",
-        status: "Berlangsung",
-        progress: 42,
-        progressText: "5/12 kandidat",
-        icon: "clock",
-    },
-];
-
-const dummyKandidat = [
-    {
-        id: 1,
-        initials: "AR",
-        nama: "Ahmad Rizki Pratama",
-        email: "ahmad.rizki@email.com",
-        pengalaman: "3 tahun",
-        pendidikan: "S1 Teknik Informatika",
-        skill: ["React", "Node.js", "TypeScript", "MongoDB"],
-        status: "Menunggu Penilaian",
-        avgRating: "8.2/1/0",
-        yourRating: null,
-    },
-    {
-        id: 2,
-        initials: "SD",
-        nama: "Sari Dewi Lestari",
-        email: "sari.dewi@email.com",
-        pengalaman: "5 tahun",
-        pendidikan: "S1 Sistem Informasi",
-        skill: ["Vue.js", "Python", "PostgreSQL", "Docker"],
-        status: "Sudah Dinilai",
-        avgRating: "8.1/10",
-        yourRating: "8.5/10",
-    },
-    {
-        id: 3,
-        initials: "BS",
-        nama: "Budi Santoso",
-        email: "budi.santoso@email.com",
-        pengalaman: "2 tahun",
-        pendidikan: "S1 Teknik Komputer",
-        skill: ["Angular", "Java", "Spring Boot", "MySQL"],
-        status: "Menunggu Penilaian",
-        avgRating: "7.8/10",
-        yourRating: null,
-    },
-    {
-        id: 4,
-        initials: "MI",
-        nama: "Maya Indra Sari",
-        email: "maya.indra@email.com",
-        pengalaman: "4 tahun",
-        pendidikan: "S1 Teknik Informatika",
-        skill: ["React Native", "Flutter", "Firebase", "GraphQL"],
-        status: "Sudah Dinilai",
-        avgRating: "8.7/10",
-        yourRating: "9/10",
-    },
-];
+import { getAssignedProjects } from "../services/projectService";
+import { getAlternativesByProject } from "../services/alternativeService";
 
 // Komponen Kartu Statistik (TIDAK ADA PERUBAHAN)
 function StatCard({ icon, color, value, title, badge }) {
@@ -165,6 +60,8 @@ function StatCard({ icon, color, value, title, badge }) {
     );
 }
 
+
+
 // Komponen Utama Dashboard
 function DashboardDM() {
     const [currentDateTime, setCurrentDateTime] = useState(new Date());
@@ -172,6 +69,13 @@ function DashboardDM() {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
     const [filterStatus, setFilterStatus] = useState('all');
     const filterRef = useRef(null);
+
+    // Real Data State
+    const [projects, setProjects] = useState([]);
+    const [selectedProject, setSelectedProject] = useState(null);
+    const [candidates, setCandidates] = useState([]);
+    const [loading, setLoading] = useState(true);
+
 
     useEffect(() => {
         const timerID = setInterval(() => {
@@ -181,6 +85,68 @@ function DashboardDM() {
             clearInterval(timerID);
         };
     }, []);
+
+    // Fetch Assigned Projects
+    useEffect(() => {
+        const fetchProjects = async () => {
+            try {
+                const data = await getAssignedProjects();
+                setProjects(data || []);
+                if (data && data.length > 0) {
+                    setSelectedProject(data[0]); // Default to first project
+                }
+            } catch (error) {
+                console.error("Failed to fetch assigned projects:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchProjects();
+    }, []);
+
+    // Fetch Candidates when Project Changes
+    useEffect(() => {
+        if (selectedProject) {
+            const fetchCandidates = async () => {
+                try {
+                    const projectId = selectedProject.ID || selectedProject.project_id;
+                    const data = await getAlternativesByProject(projectId);
+
+                    // Format data similar to dummy structure
+                    const formatted = data.map(item => {
+                        let details = {};
+                        try {
+                            details = JSON.parse(item.description || "{}");
+                            // Handle double encoded or nested
+                            if (typeof details === 'string') details = JSON.parse(details);
+                            if (details.education && typeof details.education === 'string' && details.education.startsWith('{')) {
+                                try { details = JSON.parse(details.education); } catch (e) { }
+                            }
+                        } catch (e) {
+                            details = { note: item.description };
+                        }
+
+                        return {
+                            id: item.alternative_id,
+                            initials: item.name.substring(0, 2).toUpperCase(),
+                            nama: item.name,
+                            email: details.email || "-",
+                            pengalaman: details.experience || "-",
+                            pendidikan: details.education || "-",
+                            skill: Array.isArray(details.skills) ? details.skills : [],
+                            status: "Menunggu Penilaian", // Default for now
+                            avgRating: "-", // Placeholder
+                            yourRating: null, // Placeholder
+                        };
+                    });
+                    setCandidates(formatted);
+                } catch (error) {
+                    console.error("Failed to fetch candidates:", error);
+                }
+            };
+            fetchCandidates();
+        }
+    }, [selectedProject]);
 
     useEffect(() => {
         function handleClickOutside(event) {
@@ -202,14 +168,13 @@ function DashboardDM() {
         setFilterStatus(status);
         setIsFilterOpen(false);
         setOpenDetailId(null);
-        console.log(`Filter diubah menjadi: ${status}`);
     };
 
     const handleExport = () => {
-        console.log("Fungsi Export dipanggil. Implementasi logika export di sini.");
+        alert("Fitur Export akan segera hadir!");
     };
 
-    const filteredKandidat = dummyKandidat.filter(kandidat => {
+    const filteredKandidat = candidates.filter(kandidat => {
         if (filterStatus === 'all') {
             return true;
         }
@@ -291,35 +256,35 @@ function DashboardDM() {
                     </div>
                 </div>
 
-                {/* Grid Statistik 4 Kartu (TIDAK BERUBAH) */}
+                {/* Grid Statistik 4 Kartu */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                     <StatCard
                         icon={<BsPerson className="text-2xl" />}
                         color="blue"
-                        value="12"
+                        value={candidates.length}
                         title="Total Kandidat"
-                        badge="+3 baru"
+                        badge={`${candidates.length} orang`}
                     />
                     <StatCard
                         icon={<BsCheckLg className="text-2xl" />}
                         color="green"
-                        value="8"
+                        value={candidates.filter(c => c.status === "Sudah Dinilai").length}
                         title="Sudah Dievaluasi"
-                        badge="67% selesai"
+                        badge={`${candidates.length > 0 ? Math.round((candidates.filter(c => c.status === "Sudah Dinilai").length / candidates.length) * 100) : 0}% selesai`}
                     />
                     <StatCard
                         icon={<BsClock className="text-2xl" />}
                         color="yellow"
-                        value="4"
+                        value={candidates.filter(c => c.status === "Menunggu Penilaian").length}
                         title="Menunggu Evaluasi"
-                        badge="33% tersisa"
+                        badge={`${candidates.length > 0 ? Math.round((candidates.filter(c => c.status === "Menunggu Penilaian").length / candidates.length) * 100) : 0}% tersisa`}
                     />
                     <StatCard
                         icon={<BsStar className="text-2xl" />}
                         color="purple"
-                        value="7.8"
+                        value="-"
                         title="Rata-rata Skor"
-                        badge="+0.3 dari target"
+                        badge="Menunggu hasil"
                     />
                 </div>
 
@@ -477,7 +442,7 @@ function DashboardDM() {
                                                 </button>
 
                                                 <Link
-                                                    to={`/penilaian/${kandidat.id}`}
+                                                    to={`/dm/penilaian/${selectedProject?.ID || selectedProject?.project_id}/${kandidat.id}`}
                                                     className={`flex items-center px-4 py-2 rounded-lg text-sm font-semibold transition-colors ${kandidat.status === "Menunggu Penilaian"
                                                         ? "bg-blue-600 text-white hover:bg-blue-700"
                                                         : "bg-green-100 text-green-700 hover:bg-green-200"
@@ -531,7 +496,7 @@ function DashboardDM() {
                         )}
                     </div>
 
-                    {/* Kolom Kanan: Progress & Evaluasi Terbaru (TIDAK BERUBAH) */}
+                    {/* Kolom Kanan: Progress & Evaluasi Terbaru */}
                     <div className="lg:col-span-1 space-y-8">
                         {/* Box Progress Evaluasi */}
                         <div className="bg-white p-6 rounded-lg shadow-sm">
@@ -539,147 +504,50 @@ function DashboardDM() {
                                 <h3 className="text-xl font-semibold text-gray-800">
                                     Progress Evaluasi
                                 </h3>
-                                <span className="text-sm text-gray-500">8/12 selesai</span>
+                                <span className="text-sm text-gray-500">
+                                    {candidates.filter(c => c.status === "Sudah Dinilai").length}/{candidates.length} selesai
+                                </span>
                             </div>
                             <div className="mb-6">
                                 <div className="flex justify-between text-sm text-gray-600 mb-1">
                                     <span>Kemajuan Evaluasi</span>
-                                    <span className="font-semibold text-blue-600">67%</span>
+                                    <span className="font-semibold text-blue-600">
+                                        {candidates.length > 0 ? Math.round((candidates.filter(c => c.status === "Sudah Dinilai").length / candidates.length) * 100) : 0}%
+                                    </span>
                                 </div>
                                 <div className="w-full bg-gray-200 rounded-full h-2.5">
                                     <div
                                         className="bg-blue-600 h-2.5 rounded-full"
-                                        style={{ width: "67%" }}
+                                        style={{ width: `${candidates.length > 0 ? Math.round((candidates.filter(c => c.status === "Sudah Dinilai").length / candidates.length) * 100) : 0}%` }}
                                     ></div>
                                 </div>
                                 <div className="flex justify-between text-xs text-gray-400 mt-1">
                                     <span>0</span>
-                                    <span>12 kandidat</span>
+                                    <span>{candidates.length} kandidat</span>
                                 </div>
                             </div>
 
-                            {/* Evaluasi Terbaru */}
-                            <h3 className="text-xl font-semibold text-gray-800 mb-5">
-                                Evaluasi Terbaru
-                            </h3>
-                            <div className="space-y-5">
-                                {dummyEvaluasiTerbaru.map((evaluasi) => (
-                                    <div
-                                        key={evaluasi.id}
-                                        className="flex items-center justify-between"
-                                    >
-                                        <div className="flex items-center space-x-3">
-                                            {/* Status Dot */}
-                                            <div className="shrink-0">
-                                                <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
-                                            </div>
-                                            <div>
-                                                <p className="font-semibold text-gray-800">
-                                                    {evaluasi.nama}
-                                                </p>
-                                                <p className="text-sm text-gray-500">
-                                                    {evaluasi.waktu}
-                                                </p>
-                                            </div>
-                                        </div>
-                                        <span
-                                            className={`font-bold ${evaluasi.statusColor} text-lg`}
-                                        >
-                                            {evaluasi.skor}
-                                        </span>
-                                    </div>
-                                ))}
+                            {/* Evaluasi Terbaru (Placeholder) */}
+                            <div className="mt-8 p-4 bg-gray-50 rounded-lg text-center">
+                                <p className="text-gray-500 text-sm">
+                                    Riwayat evaluasi terbaru akan muncul di sini.
+                                </p>
                             </div>
-
-                            <Link
-                                to="/evaluasi-semua"
-                                className="w-full flex items-center justify-center text-blue-600 font-semibold mt-6 py-2.5 hover:bg-blue-50 rounded-lg transition-colors border border-transparent hover:border-blue-200"
-                            >
-                                <BsEye className="mr-2" />
-                                Lihat Semua Evaluasi
-                            </Link>
                         </div>
 
-                        {/* Box Status Konsensus */}
-                        <div className="bg-white p-6 rounded-lg shadow-sm">
+                        {/* Box Status Konsensus (Placeholder) */}
+                        <div className="bg-white p-6 rounded-lg shadow-sm opacity-75">
                             <div className="flex justify-between items-center mb-4">
                                 <h3 className="text-xl font-semibold text-gray-800">
                                     Status Konsensus
                                 </h3>
-                                <span className="bg-yellow-100 text-yellow-800 text-sm font-semibold px-3 py-1 rounded-full">
-                                    Berlangsung
+                                <span className="bg-gray-100 text-gray-600 text-sm font-semibold px-3 py-1 rounded-full">
+                                    Coming Soon
                                 </span>
                             </div>
-                            <div className="mb-4">
-                                <div className="flex justify-between text-sm text-gray-600 mb-1">
-                                    <span>Progress Evaluator</span>
-                                    <span className="font-semibold text-green-600">2/3</span>
-                                </div>
-                                <div className="w-full bg-gray-200 rounded-full h-2.5">
-                                    <div
-                                        className="bg-green-600 h-2.5 rounded-full"
-                                        style={{ width: "66.6%" }}
-                                    ></div>
-                                </div>
-                                <p className="text-sm text-gray-500 mt-1">
-                                    Deadline konsensus: 2 hari lagi
-                                </p>
-                            </div>
-
-                            {/* Status Evaluator */}
-                            <h3 className="text-lg font-semibold text-gray-800 mb-3">
-                                Status Evaluator
-                            </h3>
-                            <div className="space-y-3">
-                                {dummyStatusEvaluator.map((evaluator) => (
-                                    <div
-                                        key={evaluator.id}
-                                        className="border border-gray-200 rounded-lg p-4"
-                                    >
-                                        <div className="flex justify-between items-center mb-2">
-                                            <div className="flex items-center space-x-2">
-                                                {evaluator.icon === "check" && (
-                                                    <BsCheckCircleFill className="text-green-600" />
-                                                )}
-                                                {evaluator.icon === "clock" && (
-                                                    <BsClockFill className="text-yellow-600" />
-                                                )}
-                                                <span className="font-semibold text-gray-800">
-                                                    {evaluator.nama}
-                                                </span>
-                                            </div>
-                                            <span
-                                                className={`font-semibold ${evaluator.status === "Selesai"
-                                                    ? "text-green-600"
-                                                    : "text-yellow-800"
-                                                    }`}
-                                            >
-                                                {evaluator.status}
-                                            </span>
-                                        </div>
-                                        <p className="text-sm text-gray-500 mb-1">
-                                            Progress: {evaluator.progressText}
-                                        </p>
-                                        <div className="w-full bg-gray-200 rounded-full h-2">
-                                            <div
-                                                className={`${evaluator.status === "Selesai"
-                                                    ? "bg-green-600"
-                                                    : "bg-yellow-600"
-                                                    } h-2 rounded-full`}
-                                                style={{ width: `${evaluator.progress}%` }}
-                                            ></div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <Link
-                                to="/konsensus-detail"
-                                className="w-full flex items-center justify-center text-white font-semibold bg-blue-600 mt-6 py-2.5 hover:bg-blue-700 rounded-lg transition-colors"
-                            >
-                                <BsPeopleFill className="mr-2" />
-                                Lihat Detail Konsensus
-                            </Link>
+                            <p className="text-gray-500 text-sm">
+                                Fitur konsensus tim akan tersedia pada update berikutnya.
+                            </p>
                         </div>
                     </div>
                 </div>

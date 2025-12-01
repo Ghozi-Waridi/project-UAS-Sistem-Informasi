@@ -60,11 +60,18 @@ func (s *authService) generateToken(user *models.User) (string, error) {
 }
 
 func (s *authService) Register(input models.RegisterInput) (*models.User, error) {
+	// Check if email already exists
 	_, err := s.userRepo.FindByEmail(input.Email)
-	if err == nil || err != gorm.ErrRecordNotFound {
+	if err == nil {
+		// Email found, already exists
 		return nil, errors.New("Email already exists")
 	}
+	if err != gorm.ErrRecordNotFound {
+		// Some other database error occurred
+		return nil, err
+	}
 
+	// Email doesn't exist, proceed with registration
 	hashPassword, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err

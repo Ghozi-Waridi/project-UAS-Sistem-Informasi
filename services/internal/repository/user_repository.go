@@ -11,6 +11,7 @@ type UserRepository interface {
 	FindByEmail(email string) (*models.User, error)
 	FindById(id uint) (*models.User, error)
 	CreateCompany(comapany *models.Company) error
+	GetUsersByRole(companyID uint, role string) ([]models.User, error)
 }
 
 type userRepository struct {
@@ -48,4 +49,13 @@ func (r *userRepository) FindById(id uint) (*models.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r *userRepository) GetUsersByRole(companyID uint, role string) ([]models.User, error) {
+	var users []models.User
+	err := r.db.Where("company_id = ? AND role = ?", companyID, role).Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }

@@ -7,7 +7,8 @@ import (
 )
 
 type InputScoreService interface {
-	SubmitScores(input models.SubmitScioreInput, projectID uint, dmUserID uint) error
+	SubmitScores(input models.SubmitScoreInput, projectID uint, dmUserID uint) error
+	SubmitScore(input models.ScoreInputItem, projectID uint, dmUserID uint) error
 	GetScores(projectID uint, dmUserID uint) ([]models.DMInputScore, error)
 }
 
@@ -26,7 +27,7 @@ func NewInputScoreService(
 	}
 }
 
-func (s *inputScoreService) SubmitScores(input models.SubmitScioreInput, projectID uint, dmUserID uint) error {
+func (s *inputScoreService) SubmitScores(input models.SubmitScoreInput, projectID uint, dmUserID uint) error {
 
 	assignment, err := s.projectDMRepo.GetAssignmentByProjectAndUser(projectID, dmUserID)
 	if err != nil {
@@ -45,6 +46,22 @@ func (s *inputScoreService) SubmitScores(input models.SubmitScioreInput, project
 	}
 
 	return s.scoreRepo.BatchUpsertInputScores(assignment.ProjectDMID, scores)
+}
+
+func (s *inputScoreService) SubmitScore(input models.ScoreInputItem, projectID uint, dmUserID uint) error {
+	assignment, err := s.projectDMRepo.GetAssignmentByProjectAndUser(projectID, dmUserID)
+	if err != nil {
+		return errors.New("user is not an assigned decision maker for this project")
+	}
+
+	score := models.DMInputScore{
+		ProjectDMID:   assignment.ProjectDMID,
+		AlternativeID: input.AlternativeID,
+		CriteriaID:    input.CriteriaID,
+		ScoreValue:    input.ScoreValue,
+	}
+
+	return s.scoreRepo.CreateScore(&score)
 }
 
 func (s *inputScoreService) GetScores(projectID uint, dmUserID uint) ([]models.DMInputScore, error) {

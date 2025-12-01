@@ -70,6 +70,67 @@ func (s *decisionService) checkProjectAccess(projectID uint, companyID uint) err
 	return nil
 }
 
+func (s *decisionService) validateProjectReadyForCalculation(projectID uint) error {
+	// 1. Check criteria
+	allCriteria, err := s.criteriaRepo.GetCriteriaByProjectID(projectID)
+	if err != nil {
+		return err
+	}
+	if len(allCriteria) == 0 {
+		return errors.New("Proyek belum memiliki kriteria. Silakan tambahkan kriteria terlebih dahulu.")
+	}
+
+	// 2. Check sub-criteria (required for AHP)
+	hasSubCriteria := false
+	for _, c := range allCriteria {
+		if c.ParentCriteriaID != nil {
+			hasSubCriteria = true
+			break
+		}
+	}
+	if !hasSubCriteria {
+		return errors.New("Proyek belum memiliki sub-kriteria. Metode AHP memerlukan minimal 1 sub-kriteria.")
+	}
+
+	// 3. Check alternatives
+	alternatives, err := s.altRepo.GetAlternativeByProject(projectID)
+	if err != nil {
+		return err
+	}
+	if len(alternatives) == 0 {
+		return errors.New("Proyek belum memiliki alternatif (kandidat). Silakan tambahkan kandidat terlebih dahulu.")
+	}
+
+	// 4. Check DM assignments
+	assignments, err := s.projectDMRepo.GetAssignmentsByProjectID(projectID)
+	if err != nil {
+		return err
+	}
+	if len(assignments) == 0 {
+		return errors.New("Belum ada Decision Maker yang ditugaskan untuk proyek ini.")
+	}
+
+	// 5. Check DM input data
+	for _, dm := range assignments {
+		switch dm.Method {
+		case "AHP_SAW":
+			pairwise, _ := s.pairwiseRepo.GetPairwiseComparisons(dm.ProjectDMID)
+			scores, _ := s.scoreRepo.GetScores(dm.ProjectDMID)
+			if len(pairwise) == 0 || len(scores) == 0 {
+				return errors.New("Decision Maker belum melengkapi input data yang diperlukan (pairwise comparisons dan scores).")
+			}
+		case "TOPSIS":
+			weights, _ := s.directWtRepo.GetDIrectWeightls(dm.ProjectDMID)
+			scores, _ := s.scoreRepo.GetScores(dm.ProjectDMID)
+			if len(weights) == 0 || len(scores) == 0 {
+				return errors.New("Decision Maker belum melengkapi input data yang diperlukan (weights dan scores).")
+			}
+		}
+	}
+
+	return nil
+}
+
 func (s *decisionService) GetResults(projectID uint, companyID uint) ([]models.ResultRanking, error) {
 
 	if err := s.checkProjectAccess(projectID, companyID); err != nil {
@@ -85,6 +146,11 @@ func (s *decisionService) CalculateResults(projectID uint, companyID uint, role 
 		return errors.New("only admins can trigger calculation")
 	}
 	if err := s.checkProjectAccess(projectID, companyID); err != nil {
+		return err
+	}
+
+	// Validate project has all required data before attempting calculation
+	if err := s.validateProjectReadyForCalculation(projectID); err != nil {
 		return err
 	}
 
@@ -221,5 +287,5 @@ func (s *decisionService) CalculateResults(projectID uint, companyID uint, role 
 	}
 
 	log.Println("Menyimpan semua hasil ke database...")
-	return s.resultRepo.CreatelRangkingss(allResultsToSave)
+	return s.resultRepo.CreateRankings(allResultsToSave)
 }

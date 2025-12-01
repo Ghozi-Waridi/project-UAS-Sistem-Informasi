@@ -20,6 +20,8 @@ func toCriteriaDTO(criteria *models.Criteria) models.CriteriaDTO {
 type CriteriaService interface {
 	CreateCriteria(input models.CreateCriteriaInput, projectID uint, companyID uint, role string) (*models.CriteriaDTO, error)
 	GetCriteriaByProject(projectID uint, companyID uint) ([]models.CriteriaDTO, error)
+	UpdateCriteria(criteriaID uint, input models.UpdateCriteriaInput, projectID uint, companyID uint, role string) (*models.CriteriaDTO, error)
+	DeleteCriteria(criteriaID uint, projectID uint, companyID uint, role string) error
 }
 
 type criteriaService struct {
@@ -119,4 +121,61 @@ func (s *criteriaService) GetCriteriaByProject(projectID uint, companyID uint) (
 	tree := buildTree(rootCriteria)
 
 	return tree, nil
+}
+
+func (s *criteriaService) UpdateCriteria(criteriaID uint, input models.UpdateCriteriaInput, projectID uint, companyID uint, role string) (*models.CriteriaDTO, error) {
+	if role != "admin" {
+		return nil, errors.New("only admins can update criteria")
+	}
+
+	if err := s.checkProjectAccess(projectID, companyID); err != nil {
+		return nil, err
+	}
+
+	criteria, err := s.criteriaRepo.GetCriteriaByID(criteriaID)
+	if err != nil {
+		return nil, err
+	}
+
+	if criteria.ProjectID != projectID {
+		return nil, errors.New("criteria does not belong to this project")
+	}
+
+	if input.Name != "" {
+		criteria.Name = input.Name
+	}
+	if input.Code != "" {
+		criteria.Code = input.Code
+	}
+	if input.Type != "" {
+		criteria.Type = input.Type
+	}
+
+	if err := s.criteriaRepo.UpdateCriteria(criteria); err != nil {
+		return nil, err
+	}
+
+	dto := toCriteriaDTO(criteria)
+	return &dto, nil
+}
+
+func (s *criteriaService) DeleteCriteria(criteriaID uint, projectID uint, companyID uint, role string) error {
+	if role != "admin" {
+		return errors.New("only admins can delete criteria")
+	}
+
+	if err := s.checkProjectAccess(projectID, companyID); err != nil {
+		return err
+	}
+
+	criteria, err := s.criteriaRepo.GetCriteriaByID(criteriaID)
+	if err != nil {
+		return err
+	}
+
+	if criteria.ProjectID != projectID {
+		return errors.New("criteria does not belong to this project")
+	}
+
+	return s.criteriaRepo.DeleteCriteria(criteriaID)
 }

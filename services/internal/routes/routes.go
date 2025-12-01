@@ -23,7 +23,8 @@ func SetupUserRoutes(r *gin.Engine, userHandler handler.Userhandler) {
 	{
 		userGroup := api.Group("/users", middleware.AuthMiddleware())
 		{
-			userGroup.POST("/", userHandler.CreateDM)
+			userGroup.POST("", userHandler.CreateDM)
+			userGroup.GET("/dms", userHandler.GetDMs) // Specific route first
 			userGroup.GET("/:id", userHandler.GetUserProfile)
 		}
 	}
@@ -35,9 +36,12 @@ func SetupProjectRoutes(r *gin.Engine, projectHandler handler.ProjectHandler) {
 	{
 		projectGroup := api.Group("/projects", middleware.AuthMiddleware())
 		{
-			projectGroup.POST("/", projectHandler.CreateProject)
-			projectGroup.GET("/", projectHandler.GetProjectsByCompany)
+			projectGroup.POST("", projectHandler.CreateProject)
+			projectGroup.GET("", projectHandler.GetProjectsByCompany)
+			projectGroup.GET("/assigned", projectHandler.GetAssignedProjects) // Specific route first
 			projectGroup.GET("/:projectID", projectHandler.GetProjectByID)
+			projectGroup.PUT("/:projectID", projectHandler.UpdateProject)
+			projectGroup.DELETE("/:projectID", projectHandler.DeleteProject)
 		}
 	}
 }
@@ -49,6 +53,8 @@ func SetupCriteriaRoutes(r *gin.Engine, criteriaHandler handler.CriteriaHandler)
 		{
 			projectGroup.POST("/criteria", criteriaHandler.CreateCriteria)
 			projectGroup.GET("/criteria", criteriaHandler.GetCriteriaByProject)
+			projectGroup.PUT("/criteria/:criteriaID", criteriaHandler.UpdateCriteria)
+			projectGroup.DELETE("/criteria/:criteriaID", criteriaHandler.DeleteCriteria)
 		}
 	}
 }
@@ -60,6 +66,8 @@ func SetupAlternativeRoutes(r *gin.Engine, alternativeHandler handler.Alternativ
 		{
 			projectGroup.POST("/alternatives", alternativeHandler.CreateAlternative)
 			projectGroup.GET("/alternatives", alternativeHandler.GetAlternativeByProject)
+			projectGroup.PUT("/alternatives/:alternativeID", alternativeHandler.UpdateAlternative)
+			projectGroup.DELETE("/alternatives/:alternativeID", alternativeHandler.DeleteAlternative)
 		}
 	}
 }
@@ -75,6 +83,8 @@ func SetupProjectDMRoutes(r *gin.Engine, projectDMHandler handler.ProjectDMHandl
 			projectGroup.POST("/assign-dm", projectDMHandler.AssignDM)
 
 			projectGroup.GET("/decision-makers", projectDMHandler.GetAssignmentsByProject)
+			projectGroup.PUT("/decision-makers/:projectDMID", projectDMHandler.UpdateAssignment)
+			projectGroup.DELETE("/decision-makers/:dmUserID", projectDMHandler.RemoveAssignment)
 		}
 	}
 }
@@ -112,7 +122,7 @@ func SetupInputScoreRoutes(r *gin.Engine, scoreHandler handler.InputScoreHandler
 		{
 
 			projectGroup.POST("/scores", scoreHandler.SubmitScores)
-
+			projectGroup.POST("/score", scoreHandler.SubmitScore)
 			projectGroup.GET("/scores", scoreHandler.GetScores)
 		}
 	}

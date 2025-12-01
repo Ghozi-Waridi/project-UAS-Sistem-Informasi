@@ -22,6 +22,7 @@ func toUserDTO(user *models.User) models.UserDTO {
 type UserService interface {
 	GetUserByID(id uint) (*models.UserProfile, error)
 	CreateDM(input models.CreateDMInput, adminCompanyID uint) (*models.UserDTO, error)
+	GetDMs(companyID uint) ([]models.UserDTO, error)
 }
 
 type userService struct {
@@ -82,4 +83,17 @@ func (s *userService) CreateDM(input models.CreateDMInput, adminCompanyID uint) 
 	// 5. Kembalikan sebagai DTO yang aman
 	userDTO := toUserDTO(&newUser)
 	return &userDTO, nil
+}
+
+func (s *userService) GetDMs(companyID uint) ([]models.UserDTO, error) {
+	users, err := s.userRepo.GetUsersByRole(companyID, "dm")
+	if err != nil {
+		return nil, err
+	}
+
+	var userDTOs []models.UserDTO
+	for _, u := range users {
+		userDTOs = append(userDTOs, toUserDTO(&u))
+	}
+	return userDTOs, nil
 }

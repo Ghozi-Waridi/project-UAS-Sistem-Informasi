@@ -93,9 +93,14 @@ type DMInputScore struct {
 	Criteria             Criteria             `gorm:"foreignKey:CriteriaID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 }
 
+// TableName overrides the default table name for DMInputScore
+func (DMInputScore) TableName() string {
+	return "dm_inputs_scores"
+}
+
 type DMInputPairwise struct {
 	ComparisonID     uint    `gorm:"primaryKey;column:comparison_id" json:"comparison_id"`
-	ProjectDMID      uint    `gorm:"not null;column:project_id" json:"project_dm_id"`
+	ProjectDMID      uint    `gorm:"not null;column:project_dm_id" json:"project_dm_id"`
 	Criteria1ID      uint    `gorm:"not null;column:criteria_1_id" json:"criteria_1_id"`
 	Criteria2ID      uint    `gorm:"not null;column:criteria_2_id" json:"criteria_2_id"`
 	ParentCriteriaID *uint   `gorm:"column:parent_criteria_id" json:"parent_criteria_id"`
@@ -107,6 +112,11 @@ type DMInputPairwise struct {
 	ParentCriteria       *Criteria            `gorm:"foreignKey:ParentCriteriaID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
 }
 
+// TableName overrides the default table name for DMInputPairwise
+func (DMInputPairwise) TableName() string {
+	return "dm_inputs_pairwises"
+}
+
 type DMInputDirectWeight struct {
 	WeightID    uint    `gorm:"primaryKey;column:weight_id" json:"weight_id"`
 	ProjectDMID uint    `gorm:"not null;column:project_dm_id" json:"project_dm_id"`
@@ -115,6 +125,11 @@ type DMInputDirectWeight struct {
 
 	ProjectDecisionMaker ProjectDecisionMaker `gorm:"foreignKey:ProjectDMID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	Criteria             Criteria             `gorm:"foreignKey:CriteriaID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
+}
+
+// TableName overrides the default table name for DMInputDirectWeight
+func (DMInputDirectWeight) TableName() string {
+	return "dm_inputs_direct_weights"
 }
 
 type ResultRanking struct {

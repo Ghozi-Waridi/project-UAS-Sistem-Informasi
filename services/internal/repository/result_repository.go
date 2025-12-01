@@ -8,7 +8,7 @@ import (
 
 type ResultRankingRepository interface {
 	ClearRangkings(projectID uint) error
-	CreatelRangkingss(rangkings []models.ResultRanking) error
+	CreateRankings(rangkings []models.ResultRanking) error
 	GetRangkings(projectID uint) ([]models.ResultRanking, error)
 }
 
@@ -24,7 +24,7 @@ func (r *resultRankingRepository) ClearRangkings(projectID uint) error {
 	return r.db.Where("project_id = ?", projectID).Delete(&models.ResultRanking{}).Error
 }
 
-func (r *resultRankingRepository) CreatelRangkingss(rangkings []models.ResultRanking) error {
+func (r *resultRankingRepository) CreateRankings(rangkings []models.ResultRanking) error {
 	if len(rangkings) == 0 {
 		return nil
 	}
@@ -33,6 +33,6 @@ func (r *resultRankingRepository) CreatelRangkingss(rangkings []models.ResultRan
 
 func (r *resultRankingRepository) GetRangkings(projectID uint) ([]models.ResultRanking, error) {
 	var result []models.ResultRanking
-	err := r.db.Where("proejct_id = ?", projectID).Order("project_dm_id IS NOT NULL , project_dm_id, rank").Find(&result).Error
+	err := r.db.Where("project_id = ?", projectID).Order("project_dm_id IS NOT NULL , project_dm_id, rank").Find(&result).Error
 	return result, err
 }

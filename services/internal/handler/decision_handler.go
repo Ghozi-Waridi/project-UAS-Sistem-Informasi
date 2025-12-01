@@ -26,12 +26,12 @@ func (calc *decisionHandler) TriggerCalculation(c *gin.Context) {
 		return
 	}
 
-	_, companyuID, roel, err := extractUserData(c)
+	_, companyID, role, err := extractUserData(c)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to proses User Data"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user data"})
 		return
 	}
-	err = calc.decisonService.CalculateResults(projectID, companyuID, roel)
+	err = calc.decisonService.CalculateResults(projectID, companyID, role)
 	if err != nil {
 		if err.Error() == "only admins can trigger calculation" {
 			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
@@ -45,7 +45,7 @@ func (calc *decisionHandler) TriggerCalculation(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"error": "Calculation completed succecfully"})
+	c.JSON(http.StatusOK, gin.H{"message": "Calculation completed successfully"})
 }
 
 func (h *decisionHandler) GetResults(c *gin.Context) {
