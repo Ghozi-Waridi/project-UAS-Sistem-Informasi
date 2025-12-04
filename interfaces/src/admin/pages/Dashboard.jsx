@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Sidebar from '../components/Sidebar';
 import StatCard from '../components/StatCard';
 import ProgressChart from '../components/ProgressChart';
 import QuickActions from '../components/QuickActions';
@@ -10,6 +11,7 @@ import { getProjects, createProject, updateProject, deleteProject } from '../../
 import { getAlternativesByProject } from '../../services/alternativeService';
 import { getProjectDecisionMakers } from '../../services/projectService';
 import { getCurrentUser } from '../../services/authService';
+import { getScores } from '../../services/evaluationService';
 
 export default function Dashboard() {
   const [user, setUser] = useState(getCurrentUser());
@@ -112,16 +114,33 @@ export default function Dashboard() {
 
   const [candidates, setCandidates] = useState([]);
   const [dms, setDms] = useState([]);
+  const [scores, setScores] = useState([]);
 
   const fetchProjectStats = async (projectId) => {
     try {
-      const [candidatesData, dmsData] = await Promise.all([
+      console.log('=== Dashboard fetchProjectStats ===');
+      console.log('Fetching stats for project ID:', projectId);
+      
+      const [candidatesData, dmsData, scoresData] = await Promise.all([
         getAlternativesByProject(projectId),
-        getProjectDecisionMakers(projectId)
+        getProjectDecisionMakers(projectId),
+        getScores(projectId).catch(() => []) // Handle error gracefully, return empty array
       ]);
+
+      console.log('Dashboard - Raw candidatesData from API:');
+      console.log(candidatesData);
+      console.log('Dashboard - Raw scoresData from API:');
+      console.log(scoresData);
+      console.log('Dashboard - Raw dmsData from API:');
+      console.log(dmsData);
 
       setCandidates(candidatesData || []);
       setDms(dmsData || []);
+      setScores(Array.isArray(scoresData) ? scoresData : []);
+      
+      console.log('Dashboard - Candidates set to state:', candidatesData || []);
+      console.log('Dashboard - Scores set to state:', Array.isArray(scoresData) ? scoresData : []);
+      console.log('=== End Dashboard fetchProjectStats ===\n');
 
       setStats({
         totalCandidates: candidatesData ? candidatesData.length : 0,
@@ -205,15 +224,18 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <Sidebar />
+      <div className="ml-72 min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100">
+        <div className="p-6 space-y-6">
 
       {/* Hero welcome + waktu + profil admin */}
-      <section className="bg-white rounded-3xl shadow-card px-8 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <section className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-2xl px-8 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-6 text-white transform hover:scale-[1.01] transition-transform duration-300">
         <div>
-          <h1 className="text-2xl md:text-3xl font-semibold text-gray-900">
-            Selamat Datang, {user?.name || 'Admin'}! <span className="inline-block">👋</span>
+          <h1 className="text-2xl md:text-3xl font-bold">
+            Selamat Datang, {user?.name || 'Admin'}! <span className="inline-block animate-bounce">👋</span>
           </h1>
-          <p className="text-gray-500 text-sm mt-2 max-w-xl">
+          <p className="text-blue-100 text-sm mt-2 max-w-xl">
             {selectedProject
               ? `Project Aktif: ${selectedProject.name || selectedProject.project_name}`
               : "Pilih atau buat project untuk memulai"}
@@ -226,7 +248,7 @@ export default function Dashboard() {
             {projects.length > 0 ? (
               <>
                 <select
-                  className="bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-xl focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5"
+                  className="bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white text-sm rounded-xl focus:ring-white/50 focus:border-white/50 block w-full p-2.5 font-medium"
                   value={selectedProject?.ID || selectedProject?.project_id || ""}
                   onChange={(e) => {
                     const val = parseInt(e.target.value);
@@ -235,19 +257,19 @@ export default function Dashboard() {
                   }}
                 >
                   {projects.map(p => (
-                    <option key={p.ID || p.project_id} value={p.ID || p.project_id}>{p.name || p.project_name}</option>
+                    <option key={p.ID || p.project_id} value={p.ID || p.project_id} className="text-gray-800">{p.name || p.project_name}</option>
                   ))}
                 </select>
                 <button
                   onClick={openEditModal}
-                  className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                  className="p-2 text-white hover:bg-white/10 rounded-lg transition border border-white/20"
                   title="Edit Project"
                 >
                   ✏️
                 </button>
                 <button
                   onClick={handleDeleteProject}
-                  className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition"
+                  className="p-2 text-white hover:bg-red-500/20 rounded-lg transition border border-white/20"
                   title="Hapus Project"
                 >
                   🗑️
@@ -256,7 +278,7 @@ export default function Dashboard() {
             ) : (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
+                className="bg-white text-blue-600 px-4 py-2 rounded-xl text-sm font-bold hover:bg-blue-50 transition shadow-md"
               >
                 + Buat Project Baru
               </button>
@@ -265,7 +287,7 @@ export default function Dashboard() {
             {projects.length > 0 && (
               <button
                 onClick={() => setShowCreateModal(true)}
-                className="bg-gray-100 text-gray-600 px-3 py-2 rounded-xl text-sm font-medium hover:bg-gray-200 transition"
+                className="bg-white/10 backdrop-blur-sm text-white px-3 py-2 rounded-xl text-sm font-medium hover:bg-white/20 transition border border-white/20"
                 title="Buat Project Baru"
               >
                 +
@@ -273,25 +295,25 @@ export default function Dashboard() {
             )}
           </div>
 
-          <div className="bg-blue-50 rounded-3xl px-6 py-4 text-center hidden md:block">
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-4 text-center hidden md:block border border-white/20">
             {/* ⬇️ Jam Real-time WIB */}
-            <div className="text-3xl font-semibold text-blue-600">
+            <div className="text-3xl font-bold">
               {currentTime}
             </div>
-            <div className="text-xs text-gray-500 mt-1">
+            <div className="text-xs text-blue-100 mt-1">
               {currentDate}
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-full bg-gradient-to-tr from-blue-500 to-indigo-500 flex items-center justify-center text-white font-semibold shadow-md">
+          <div className="flex items-center gap-3 bg-white/10 backdrop-blur-sm rounded-xl px-4 py-3 border border-white/20">
+            <div className="w-11 h-11 rounded-full bg-white flex items-center justify-center text-blue-600 font-bold shadow-md text-xl">
               {user?.name ? user.name.charAt(0).toUpperCase() : 'A'}
             </div>
             <div className="hidden sm:block">
-              <div className="text-sm font-semibold text-gray-800">
+              <div className="text-sm font-bold">
                 {user?.name || 'Admin'}
               </div>
-              <div className="text-xs text-gray-400 capitalize">{user?.role || 'Administrator'}</div>
+              <div className="text-xs text-blue-100 capitalize">{user?.role || 'Administrator'}</div>
             </div>
           </div>
         </div>
@@ -344,7 +366,7 @@ export default function Dashboard() {
         id="evaluation-section"
         className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-5"
       >
-        <EvaluationTable candidates={candidates} />
+        <EvaluationTable candidates={candidates} scores={scores} />
         <ActivityList />
       </section>
 
@@ -500,6 +522,8 @@ export default function Dashboard() {
 
 
 
-    </div>
+        </div>
+      </div>
+    </>
   );
 }

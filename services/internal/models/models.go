@@ -54,12 +54,13 @@ type Alternative struct {
 }
 
 type Criteria struct {
-	CriteriaID       uint   `gorm:"primaryKey;column:criteria_id" json:"criteria_id"`
-	ProjectID        uint   `gorm:"not null;column:project_id" json:"project_id"`
-	ParentCriteriaID *uint  `gorm:"column:parent_criteria_id" json:"parent_criteria_id"`
-	Name             string `gorm:"not null;column:name" json:"name"`
-	Code             string `gorm:"type:varchar(20);column:code" json:"code"`
-	Type             string `gorm:"type:varchar(50);not null;column:type;check:type IN ('benefit','cost')" json:"type"`
+	CriteriaID       uint    `gorm:"primaryKey;column:criteria_id" json:"criteria_id"`
+	ProjectID        uint    `gorm:"not null;column:project_id" json:"project_id"`
+	ParentCriteriaID *uint   `gorm:"column:parent_criteria_id" json:"parent_criteria_id"`
+	Name             string  `gorm:"not null;column:name" json:"name"`
+	Code             string  `gorm:"type:varchar(20);column:code" json:"code"`
+	Type             string  `gorm:"type:varchar(50);not null;column:type;check:type IN ('benefit','cost')" json:"type"`
+	Weight           float64 `gorm:"type:decimal(5,4);default:0;column:weight" json:"weight"`
 
 	DecisionProject DecisionProject `gorm:"foreignKey:ProjectID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	ParentCriteria  *Criteria       `gorm:"foreignKey:ParentCriteriaID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL;" json:"-"`
@@ -70,7 +71,7 @@ type ProjectDecisionMaker struct {
 	ProjectDMID uint    `gorm:"primaryKey;column:project_dm_id" json:"project_dm_id"`
 	ProjectID   uint    `gorm:"not null;column:project_id" json:"project_id"`
 	DMUserID    uint    `gorm:"not null;column:dm_user_id" json:"dm_user_id"`
-	Method      string  `gorm:"type:varchar(50);not null;column:method;check:method IN ('AHP','TOPSIS','SAW','AHP_SAW','DIRECT_WEIGHT')" json:"method"`
+	Method      string  `gorm:"type:varchar(50);not null;column:method;check:method IN ('TOPSIS')" json:"method"`
 	GroupWeight float64 `gorm:"type:decimal(5,4);default:1.0;column:group_weight" json:"group_weight"`
 
 	DecisionProject DecisionProject `gorm:"foreignKey:ProjectID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`

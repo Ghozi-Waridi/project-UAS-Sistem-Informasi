@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
 import { getProjects } from "../../services/projectService";
 import {
   getAlternativesByProject,
@@ -159,7 +160,10 @@ export default function Kandidat() {
   }
 
   return (
-    <div className="space-y-6">
+    <>
+      <Sidebar />
+      <div className="ml-72 min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-6">
+        <div className="space-y-6">
       {/* Card utama */}
       <section className="bg-white rounded-3xl shadow-card px-8 py-7 space-y-6">
         {/* Header + tombol tambah */}
@@ -427,7 +431,9 @@ export default function Kandidat() {
           </div>
         </div>
       )}
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 

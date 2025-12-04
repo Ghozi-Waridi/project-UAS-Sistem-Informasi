@@ -45,10 +45,13 @@ export default function QuickActions() {
   };
 
   return (
-    <div className="bg-white rounded-3xl shadow-card px-6 py-5 flex flex-col gap-4">
+    <div className="bg-white rounded-2xl shadow-xl px-6 py-5 flex flex-col gap-4 border border-gray-100">
       <div className="flex justify-between items-center">
-        <h3 className="font-semibold text-gray-800">Aksi Cepat</h3>
-        <button className="text-gray-400 text-lg leading-none">⋯</button>
+        <h3 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+          <span className="bg-blue-600 text-white p-2 rounded-lg">⚡</span>
+          Aksi Cepat
+        </h3>
+        <button className="text-gray-400 text-xl leading-none hover:text-gray-600 transition">⋯</button>
       </div>
 
       <div className="flex flex-col gap-3">
@@ -56,13 +59,13 @@ export default function QuickActions() {
           <button
             key={a.label}
             onClick={() => handleClick(a)}
-            className={`w-full text-left rounded-2xl px-5 py-4 bg-gradient-to-r ${a.color} text-white shadow-md hover:shadow-lg transition flex justify-between items-center`}
+            className={`w-full text-left rounded-xl px-5 py-4 bg-gradient-to-r ${a.color} text-white shadow-md hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 flex justify-between items-center`}
           >
             <div>
-              <div className="font-semibold text-sm">{a.label}</div>
+              <div className="font-bold text-sm">{a.label}</div>
               <div className="text-xs opacity-90 mt-1">{a.desc}</div>
             </div>
-            <span className="text-lg">➜</span>
+            <span className="text-xl transform group-hover:translate-x-1 transition-transform">→</span>
           </button>
         ))}
       </div>

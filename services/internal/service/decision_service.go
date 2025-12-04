@@ -18,7 +18,6 @@ type decisionService struct {
 	criteriaRepo  repository.CriteriaRepository
 	altRepo       repository.AlternativeRepository
 	projectDMRepo repository.ProjectDMRepository
-	pairwiseRepo  repository.InputPairwiseRepository
 	directWtRepo  repository.InputDirectWeightRepository
 	scoreRepo     repository.InputScoreRepository
 	resultRepo    repository.ResultRankingRepository
@@ -34,7 +33,6 @@ func NewDecisionService(
 	cRepo repository.CriteriaRepository,
 	aRepo repository.AlternativeRepository,
 	pdmRepo repository.ProjectDMRepository,
-	pwRepo repository.InputPairwiseRepository,
 	dwRepo repository.InputDirectWeightRepository,
 	sRepo repository.InputScoreRepository,
 	rRepo repository.ResultRankingRepository,
@@ -48,7 +46,6 @@ func NewDecisionService(
 		criteriaRepo:  cRepo,
 		altRepo:       aRepo,
 		projectDMRepo: pdmRepo,
-		pairwiseRepo:  pwRepo,
 		directWtRepo:  dwRepo,
 		scoreRepo:     sRepo,
 		resultRepo:    rRepo,
@@ -80,19 +77,7 @@ func (s *decisionService) validateProjectReadyForCalculation(projectID uint) err
 		return errors.New("Proyek belum memiliki kriteria. Silakan tambahkan kriteria terlebih dahulu.")
 	}
 
-	// 2. Check sub-criteria (required for AHP)
-	hasSubCriteria := false
-	for _, c := range allCriteria {
-		if c.ParentCriteriaID != nil {
-			hasSubCriteria = true
-			break
-		}
-	}
-	if !hasSubCriteria {
-		return errors.New("Proyek belum memiliki sub-kriteria. Metode AHP memerlukan minimal 1 sub-kriteria.")
-	}
-
-	// 3. Check alternatives
+	// 2. Check alternatives
 	alternatives, err := s.altRepo.GetAlternativeByProject(projectID)
 	if err != nil {
 		return err
@@ -110,20 +95,21 @@ func (s *decisionService) validateProjectReadyForCalculation(projectID uint) err
 		return errors.New("Belum ada Decision Maker yang ditugaskan untuk proyek ini.")
 	}
 
-	// 5. Check DM input data
+	// 5. Check criteria weights (Admin input)
+	for _, c := range allCriteria {
+		if c.Weight == 0 {
+			return errors.New("Ada kriteria yang belum memiliki bobot. Silakan lengkapi bobot untuk semua kriteria.")
+		}
+	}
+
+	// 6. Check DM input data (scores only, weights now from criteria)
 	for _, dm := range assignments {
 		switch dm.Method {
-		case "AHP_SAW":
-			pairwise, _ := s.pairwiseRepo.GetPairwiseComparisons(dm.ProjectDMID)
-			scores, _ := s.scoreRepo.GetScores(dm.ProjectDMID)
-			if len(pairwise) == 0 || len(scores) == 0 {
-				return errors.New("Decision Maker belum melengkapi input data yang diperlukan (pairwise comparisons dan scores).")
-			}
 		case "TOPSIS":
-			weights, _ := s.directWtRepo.GetDIrectWeightls(dm.ProjectDMID)
+			// TOPSIS needs scores (weights come from criteria)
 			scores, _ := s.scoreRepo.GetScores(dm.ProjectDMID)
-			if len(weights) == 0 || len(scores) == 0 {
-				return errors.New("Decision Maker belum melengkapi input data yang diperlukan (weights dan scores).")
+			if len(scores) == 0 {
+				return errors.New("Decision Maker belum melengkapi input skor untuk kandidat.")
 			}
 		}
 	}
@@ -192,54 +178,17 @@ func (s *decisionService) CalculateResults(projectID uint, companyID uint, role 
 		dmRanking.DMWeight = dm.GroupWeight
 
 		switch dm.Method {
-		case "AHP_SAW":
-			// 1. Ambil data AHP & Skor
-			pairwiseData, err := s.pairwiseRepo.GetPairwiseComparisons(dm.ProjectDMID)
-			if err != nil {
-				return err
-			}
-			scoreData, err := s.scoreRepo.GetScores(dm.ProjectDMID)
-			if err != nil {
-				return err
-			}
-
-			var subCriteriaIDs []uint
-			for _, sc := range subCriteria {
-				subCriteriaIDs = append(subCriteriaIDs, sc.CriteriaID)
-			}
-
-			weights, err := s.ahpCalc.CalculateWeights(pairwiseData, subCriteriaIDs)
-			if err != nil {
-				return err
-			}
-
-			sawRanks, err := s.sawCalc.CalculateRanking(scoreData, allCriteria, alternatives, weights)
-			if err != nil {
-				return err
-			}
-
-			for i, r := range sawRanks {
-				dmRanking.RankedList = append(dmRanking.RankedList, calculations.AltertnativeRank{
-					AlternativeID: r.AlternativeID,
-					Rank:          i + 1,
-					Score:         r.FinalScore,
-				})
-			}
-
 		case "TOPSIS":
-
-			weightData, err := s.directWtRepo.GetDIrectWeightls(dm.ProjectDMID)
-			if err != nil {
-				return err
-			}
+			// Get scores from DM input
 			scoreData, err := s.scoreRepo.GetScores(dm.ProjectDMID)
 			if err != nil {
 				return err
 			}
 
+			// Get weights from criteria (Admin input)
 			weights := make(map[uint]float64)
-			for _, w := range weightData {
-				weights[w.CriteriaID] = w.WeightValue
+			for _, c := range allCriteria {
+				weights[c.CriteriaID] = c.Weight
 			}
 
 			topsisRanks, err := s.topsisCalc.CalculateRanking(scoreData, allCriteria, alternatives, weights)

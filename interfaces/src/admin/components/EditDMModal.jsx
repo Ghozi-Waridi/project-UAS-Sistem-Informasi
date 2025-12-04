@@ -7,7 +7,7 @@ export default function EditDMModal({ projectId, assignment, onClose, onSuccess 
    const [loading, setLoading] = useState(false);
    const [error, setError] = useState("");
 
-   const methods = ["AHP", "AHP_SAW", "TOPSIS", "DIRECT_WEIGHT"];
+   const methods = ["TOPSIS"];
 
    const handleSubmit = async (e) => {
       e.preventDefault();

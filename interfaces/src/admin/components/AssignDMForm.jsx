@@ -8,7 +8,7 @@ export default function AssignDMForm({ projectId, onClose, onSuccess }) {
    const [loading, setLoading] = useState(false);
    const [formData, setFormData] = useState({
       dm_user_id: "",
-      method: "DIRECT_WEIGHT",
+      method: "TOPSIS",
       group_weight: 1,
    });
 
@@ -125,8 +125,6 @@ export default function AssignDMForm({ projectId, onClose, onSuccess }) {
                         onChange={handleChange}
                         className="w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                      >
-                        <option value="DIRECT_WEIGHT">Direct Weight</option>
-                        <option value="AHP_SAW">Pairwise Comparison (AHP)</option>
                         <option value="TOPSIS">TOPSIS</option>
                      </select>
                   </div>
@@ -147,7 +145,7 @@ export default function AssignDMForm({ projectId, onClose, onSuccess }) {
                         required
                      />
                      <p className="text-[10px] text-gray-400">
-                        Semakin tinggi angka, semakin besar pengaruh penilaian user ini.
+                        Bobot ini menentukan pengaruh DM dalam konsensus akhir. Bukan bobot kriteria (akan di-input oleh DM nanti).
                      </p>
                   </div>
 

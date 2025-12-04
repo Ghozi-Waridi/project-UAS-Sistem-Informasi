@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
+import Sidebar from "../admin/components/Sidebar";
 import {
     BsBarChartFill,
     BsFileEarmarkArrowUp,
@@ -19,13 +20,13 @@ import { getAlternativesByProject } from "../services/alternativeService";
 
 function StatCard({ icon, value, title, bgColor, iconColor }) {
     return (
-        <div className="bg-white p-5 rounded-lg shadow-sm flex items-center space-x-4">
-            <div className={`${bgColor} ${iconColor} p-4 rounded-lg`}>
+        <div className="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-gray-100 flex items-center space-x-4">
+            <div className={`${bgColor} ${iconColor} p-4 rounded-xl shadow-md transform hover:scale-110 transition-all duration-300`}>
                 {icon}
             </div>
             <div>
-                <p className="text-2xl font-bold text-gray-800">{value}</p>
-                <p className="text-gray-500">{title}</p>
+                <p className="text-3xl font-bold text-gray-800 animate-pulse">{value}</p>
+                <p className="text-gray-600 font-medium text-sm">{title}</p>
             </div>
         </div>
     );
@@ -85,24 +86,36 @@ function HasilSeleksi() {
     const mergedData = useMemo(() => {
         if (!results.length || !alternatives.length) return [];
 
-        // Filter for final results (consensus)
-        const finalResults = results.filter(r => r.ProjectDMID === null);
+        // Filter for final results (consensus) - ProjectDMID is null
+        const finalResults = results.filter(r => r.project_dm_id === null || r.ProjectDMID === null);
 
-        return finalResults.map(r => {
-            const alt = alternatives.find(a => (a.alternative_id || a.id) === r.AlternativeID);
+        // If no consensus results, show all results (single DM case)
+        const resultsToShow = finalResults.length > 0 ? finalResults : results;
+
+        return resultsToShow.map(r => {
+            // Handle both camelCase and snake_case from backend
+            const alternativeId = r.alternative_id || r.AlternativeID;
+            const alt = alternatives.find(a => {
+                const altId = a.alternative_id || a.AlternativeID || a.id;
+                return altId === alternativeId;
+            });
+            
             return {
-                id: r.ID,
-                name: alt ? alt.name : `Unknown (${r.AlternativeID})`,
+                id: r.result_id || r.ResultID || r.id || r.ID,
+                alternativeId: alternativeId,
+                name: alt ? alt.name : `Kandidat #${alternativeId}`,
                 role: "Candidate",
-                score: r.FinalScore,
-                rank: r.Rank,
+                score: parseFloat(r.final_score || r.FinalScore || 0),
+                rank: parseInt(r.rank || r.Rank || 0),
             };
-        }).sort((a, b) => a.rank - b.rank);
+        })
+            .filter(r => r.score > 0 && r.rank > 0) // Only valid results
+            .sort((a, b) => a.rank - b.rank);
     }, [results, alternatives]);
 
     const stats = useMemo(() => {
         const total = mergedData.length;
-        const avgScore = total > 0 ? mergedData.reduce((acc, c) => acc + c.score, 0) / total : 0;
+        const avgScore = total > 0 ? mergedData.reduce((acc, c) => acc + (c.score || 0), 0) / total : 0;
         const accepted = mergedData.filter((c, idx) => idx < 3).length;
         const interview = mergedData.filter((c, idx) => idx >= 3 && idx < 6).length;
         const rejected = total - accepted - interview;
@@ -111,41 +124,46 @@ function HasilSeleksi() {
     }, [mergedData]);
 
     const getSkorColor = (skor) => {
-        if (skor >= 9.0) return "text-green-600";
-        if (skor >= 8.0) return "text-gray-800";
+        const score = parseFloat(skor || 0);
+        if (score >= 9.0) return "text-green-600";
+        if (score >= 8.0) return "text-gray-800";
         return "text-red-600";
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-7xl mx-auto">
+        <>
+            <Sidebar />
+            <div className="ml-72 min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-8">
+                <div className="max-w-7xl mx-auto">
                 {/* Header */}
-                <div className="flex justify-between items-center mb-6">
-                    <div>
-                        <div className="flex items-center space-x-2">
-                            <h1 className="text-3xl font-bold text-gray-800">
-                                Hasil Seleksi
-                            </h1>
-                            <BsBarChartFill className="text-2xl text-blue-500" />
+                <div className="bg-gradient-to-r from-blue-600 to-blue-700 rounded-2xl shadow-2xl p-6 mb-8 text-white">
+                    <div className="flex justify-between items-center">
+                        <div>
+                            <div className="flex items-center space-x-3">
+                                <h1 className="text-3xl font-bold">
+                                    Hasil Seleksi
+                                </h1>
+                                <BsBarChartFill className="text-3xl animate-bounce" />
+                            </div>
+                            <p className="text-blue-100 mt-2 text-sm">
+                                Hasil akhir proses seleksi berdasarkan konsensus GDSS
+                            </p>
                         </div>
-                        <p className="text-gray-500 mt-1">
-                            Hasil akhir proses seleksi berdasarkan konsensus GDSS
-                        </p>
-                    </div>
-                    <div className="flex space-x-3 items-center">
-                        <select
-                            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={selectedProjectId}
-                            onChange={(e) => setSelectedProjectId(e.target.value)}
-                        >
-                            <option value="" disabled>Pilih Proyek</option>
-                            {projects.map(p => (
-                                <option key={p.project_id} value={p.project_id}>{p.project_name}</option>
-                            ))}
-                        </select>
-                        <button className="flex items-center px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-700 hover:bg-blue-100 transition-colors font-semibold">
-                            <BsFileEarmarkArrowUp className="mr-2" /> Export
-                        </button>
+                        <div className="flex space-x-3 items-center">
+                            <select
+                                className="bg-white/10 backdrop-blur-sm border-2 border-white/20 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:ring-2 focus:ring-white/50 font-medium"
+                                value={selectedProjectId}
+                                onChange={(e) => setSelectedProjectId(e.target.value)}
+                            >
+                                <option value="" disabled className="text-gray-800">Pilih Proyek</option>
+                                {projects.map(p => (
+                                    <option key={p.project_id} value={p.project_id} className="text-gray-800">{p.project_name}</option>
+                                ))}
+                            </select>
+                            <button className="flex items-center px-5 py-2.5 bg-white text-blue-600 rounded-xl text-sm hover:bg-blue-50 transition-all duration-300 font-semibold shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
+                                <BsFileEarmarkArrowUp className="mr-2" /> Export
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -155,61 +173,61 @@ function HasilSeleksi() {
                         icon={<BsPerson className="text-2xl" />}
                         value={stats.total}
                         title="Total Kandidat"
-                        bgColor="bg-blue-100"
+                        bgColor="bg-gradient-to-br from-blue-100 to-blue-200"
                         iconColor="text-blue-600"
                     />
                     <StatCard
                         icon={<BsCheckCircle className="text-2xl" />}
                         value={stats.accepted}
                         title="Top 3"
-                        bgColor="bg-green-100"
+                        bgColor="bg-gradient-to-br from-green-100 to-green-200"
                         iconColor="text-green-600"
                     />
                     <StatCard
                         icon={<BsPersonBadge className="text-2xl" />}
                         value={stats.interview}
                         title="Next 3"
-                        bgColor="bg-blue-100"
+                        bgColor="bg-gradient-to-br from-blue-100 to-indigo-200"
                         iconColor="text-blue-600"
                     />
                     <StatCard
                         icon={<BsXCircle className="text-2xl" />}
                         value={stats.rejected}
                         title="Lainnya"
-                        bgColor="bg-red-100"
+                        bgColor="bg-gradient-to-br from-red-100 to-red-200"
                         iconColor="text-red-600"
                     />
                     <StatCard
                         icon={<BsStar className="text-2xl" />}
                         value={stats.avgScore.toFixed(2)}
                         title="Rata-rata Skor"
-                        bgColor="bg-purple-100"
+                        bgColor="bg-gradient-to-br from-purple-100 to-purple-200"
                         iconColor="text-purple-600"
                     />
                 </div>
 
                 {/* Konten Tab */}
-                <div className="bg-white rounded-lg shadow-sm">
+                <div className="bg-white rounded-2xl shadow-xl border border-gray-100">
                     {/* Navigasi Tab */}
-                    <div className="flex border-b border-gray-200 px-6">
+                    <div className="flex border-b-2 border-gray-200 px-6">
                         <button
                             onClick={() => setActiveTab("ringkasan")}
-                            className={`flex items-center px-1 py-4 text-base font-semibold ${activeTab === "ringkasan"
-                                ? "border-b-2 border-blue-600 text-blue-700"
-                                : "text-gray-500 hover:text-gray-700"
+                            className={`flex items-center px-4 py-4 text-base font-bold transition-all duration-300 ${activeTab === "ringkasan"
+                                ? "border-b-4 border-blue-600 text-blue-700 -mb-0.5"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                                 }`}
                         >
-                            <BsGrid className="mr-2" />
+                            <BsGrid className="mr-2 text-lg" />
                             Ringkasan
                         </button>
                         <button
                             onClick={() => setActiveTab("detail")}
-                            className={`flex items-center ml-8 px-1 py-4 text-base font-semibold ${activeTab === "detail"
-                                ? "border-b-2 border-blue-600 text-blue-700"
-                                : "text-gray-500 hover:text-gray-700"
+                            className={`flex items-center ml-4 px-4 py-4 text-base font-bold transition-all duration-300 ${activeTab === "detail"
+                                ? "border-b-4 border-blue-600 text-blue-700 -mb-0.5"
+                                : "text-gray-500 hover:text-gray-700 hover:bg-gray-50"
                                 }`}
                         >
-                            <BsListUl className="mr-2" />
+                            <BsListUl className="mr-2 text-lg" />
                             Detail Hasil
                         </button>
                     </div>
@@ -217,9 +235,15 @@ function HasilSeleksi() {
                     {/* Konten yang Ditampilkan */}
                     <div className="p-6">
                         {loading ? (
-                            <div className="text-center py-10 text-gray-500">Memuat data...</div>
+                            <div className="text-center py-10 text-gray-500">⏳ Memuat data...</div>
                         ) : mergedData.length === 0 ? (
-                            <div className="text-center py-10 text-gray-500">Belum ada hasil perhitungan untuk proyek ini.</div>
+                            <div className="text-center py-10">
+                                <div className="inline-block p-4 rounded-full bg-blue-50 mb-3">
+                                    <BsBarChartFill className="text-4xl text-blue-500" />
+                                </div>
+                                <p className="text-gray-700 font-semibold mb-2">Belum ada hasil perhitungan</p>
+                                <p className="text-sm text-gray-500">Hasil akan muncul setelah admin menjalankan perhitungan konsensus</p>
+                            </div>
                         ) : (
                             <>
                                 {activeTab === "ringkasan" && (
@@ -249,7 +273,7 @@ function HasilSeleksi() {
                                                                 </div>
                                                                 <div className="text-right">
                                                                     <p className="font-bold text-lg text-green-700">
-                                                                        {k.score.toFixed(4)}
+                                                                        {(k.score || 0).toFixed(4)}
                                                                     </p>
                                                                 </div>
                                                             </div>
@@ -276,7 +300,7 @@ function HasilSeleksi() {
                                                                     </div>
                                                                 </div>
                                                                 <p className="font-bold text-lg text-gray-600">
-                                                                    {k.score.toFixed(4)}
+                                                                    {(k.score || 0).toFixed(4)}
                                                                 </p>
                                                             </div>
                                                         </div>
@@ -330,7 +354,7 @@ function HasilSeleksi() {
                                                             <td
                                                                 className={`px-6 py-4 whitespace-nowrap text-sm font-bold ${getSkorColor(k.score)}`}
                                                             >
-                                                                {k.score.toFixed(4)}
+                                                                {(k.score || 0).toFixed(4)}
                                                             </td>
                                                             <td className="px-6 py-4 whitespace-nowrap">
                                                                 {idx < 3 ? (
@@ -355,8 +379,9 @@ function HasilSeleksi() {
                         )}
                     </div>
                 </div>
+                </div>
             </div>
-        </div>
+        </>
     );
 }
 

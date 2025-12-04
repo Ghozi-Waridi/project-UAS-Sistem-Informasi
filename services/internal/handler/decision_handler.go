@@ -2,6 +2,7 @@ package handler
 
 import (
 	"net/http"
+	"services/internal/models"
 	"services/internal/service"
 
 	"github.com/gin-gonic/gin"
@@ -69,5 +70,18 @@ func (h *decisionHandler) GetResults(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, results)
+	// Convert to DTO for consistent response format
+	var resultDTOs []models.ResultRankingDTO
+	for _, r := range results {
+		resultDTOs = append(resultDTOs, models.ResultRankingDTO{
+			ResultID:      r.ResultID,
+			ProjectID:     r.ProjectID,
+			AlternativeID: r.AlternativeID,
+			ProjectDMID:   r.ProjectDMID,
+			FinalScore:    r.FinalScore,
+			Rank:          r.Rank,
+		})
+	}
+
+	c.JSON(http.StatusOK, resultDTOs)
 }

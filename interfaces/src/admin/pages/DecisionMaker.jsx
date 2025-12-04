@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
 import { getProjects } from "../../services/projectService";
 import DecisionMakerList from "../components/DecisionMakerList";
 import AssignDMForm from "../components/AssignDMForm";
+import CreateDMForm from "../components/CreateDMForm";
 
 export default function DecisionMaker() {
   const [projects, setProjects] = useState([]);
   const [selectedProjectId, setSelectedProjectId] = useState("");
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showCreateDMModal, setShowCreateDMModal] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   // Fetch Projects on Mount
@@ -27,7 +30,10 @@ export default function DecisionMaker() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <Sidebar />
+      <div className="ml-72 min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-6">
+        <div className="space-y-6">
       <section className="bg-white rounded-3xl shadow-card px-8 py-7 space-y-6">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
@@ -54,12 +60,20 @@ export default function DecisionMaker() {
             </select>
 
             <button
+              onClick={() => setShowCreateDMModal(true)}
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-green-500 to-green-600 text-white text-sm font-semibold px-5 py-2.5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition"
+            >
+              <span className="text-base">👤＋</span>
+              <span>Buat Akun DM</span>
+            </button>
+
+            <button
               onClick={() => setShowAssignModal(true)}
               disabled={!selectedProjectId}
               className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-500 to-blue-500 text-white text-sm font-semibold px-5 py-2.5 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span className="text-base">＋</span>
-              <span>Tambah Anggota</span>
+              <span>Assign ke Project</span>
             </button>
           </div>
         </div>
@@ -85,7 +99,20 @@ export default function DecisionMaker() {
           onSuccess={() => setRefreshKey((prev) => prev + 1)}
         />
       )}
-    </div>
+
+      {/* Modal Create DM */}
+      {showCreateDMModal && (
+        <CreateDMForm
+          onClose={() => setShowCreateDMModal(false)}
+          onSuccess={() => {
+            setShowCreateDMModal(false);
+            // Optionally refresh the DM list
+          }}
+        />
+      )}
+        </div>
+      </div>
+    </>
   );
 }
 

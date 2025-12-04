@@ -2,30 +2,10 @@ import api from '../config/api';
 
 /**
  * Evaluation Service
- * Handles evaluation inputs from Decision Makers
+ * Handles evaluation inputs from Decision Makers for TOPSIS method
  */
 
-// Submit pairwise comparison (for AHP)
-export const submitPairwise = async (projectId, pairwiseData) => {
-  try {
-    const response = await api.post(`/projects/${projectId}/pairwise`, pairwiseData);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-// Get pairwise submissions for project
-export const getPairwiseSubmissions = async (projectId) => {
-  try {
-    const response = await api.get(`/projects/${projectId}/pairwise`);
-    return response.data;
-  } catch (error) {
-    throw error.response?.data || error;
-  }
-};
-
-// Submit direct weights
+// Submit direct weights (for TOPSIS)
 export const submitDirectWeights = async (projectId, weightsData) => {
   try {
     const response = await api.post(`/projects/${projectId}/direct-weights`, weightsData);

@@ -1,4 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
+import Sidebar from "../components/Sidebar";
 import { getProjects } from "../../services/projectService";
 import { getAlternativesByProject } from "../../services/alternativeService";
 import { triggerCalculation, getResults } from "../../services/resultService";
@@ -70,11 +71,21 @@ export default function Hasil() {
       // Refresh results
       const res = await getResults(selectedProjectId);
       setResults(res || []);
-      alert("Perhitungan selesai!");
+      alert("✅ Perhitungan selesai! Hasil telah diperbarui.");
     } catch (error) {
       console.error("Calculation failed:", error);
-      const errorMsg = error.response?.data?.error || error.message || "Unknown error";
-      alert("Gagal melakukan perhitungan: " + errorMsg);
+      let errorMsg = "Terjadi kesalahan tidak dikenal";
+      
+      if (error.response?.data?.error) {
+        errorMsg = error.response.data.error;
+      } else if (error.error) {
+        errorMsg = error.error;
+      } else if (error.message) {
+        errorMsg = error.message;
+      }
+      
+      // Format error message untuk user
+      alert(`❌ Gagal melakukan perhitungan:\n\n${errorMsg}\n\nPastikan semua data (kriteria, kandidat, DM, dan penilaian) telah dilengkapi.`);
     } finally {
       setCalculating(false);
     }
@@ -84,23 +95,33 @@ export default function Hasil() {
   const mergedData = useMemo(() => {
     if (!results.length || !alternatives.length) return [];
 
-    // Filter for final results (where ProjectDMID is null, meaning consensus)
-    // If you want to show individual DM results, you'd filter differently
-    const finalResults = results.filter(r => r.ProjectDMID === null);
+    // Filter only final consensus results (ProjectDMID = null)
+    // For multi-DM projects with BORDA aggregation
+    const finalResults = results.filter(r => r.project_dm_id === null || r.ProjectDMID === null);
 
-    return finalResults.map(r => {
-      const alt = alternatives.find(a => (a.alternative_id || a.id) === r.AlternativeID);
+    // If no consensus results, show all results (single DM case)
+    const resultsToShow = finalResults.length > 0 ? finalResults : results;
+
+    return resultsToShow.map(r => {
+      // Backend sends: AlternativeID, FinalScore, Rank, ProjectDMID (camelCase or snake_case)
+      const alternativeId = r.alternative_id || r.AlternativeID;
+      const alt = alternatives.find(a => {
+        const altId = a.alternative_id || a.AlternativeID || a.id;
+        return altId === alternativeId;
+      });
+
       return {
-        id: r.ID,
-        alternativeId: r.AlternativeID,
-        name: alt ? alt.name : `Unknown (${r.AlternativeID})`,
-        role: "Candidate", // Placeholder or from alt description
-        score: r.FinalScore,
-        rank: r.Rank,
-        // Parse description for extra details if needed
+        id: r.result_id || r.ResultID || r.id || r.ID,
+        alternativeId: alternativeId,
+        name: alt ? alt.name : `Kandidat #${alternativeId}`,
+        role: "Candidate",
+        score: parseFloat(r.final_score || r.FinalScore || 0),
+        rank: parseInt(r.rank || r.Rank || 0),
         details: alt ? (tryParseJSON(alt.description) || {}) : {}
       };
-    }).sort((a, b) => a.rank - b.rank);
+    })
+      .filter(r => r.score > 0 && r.rank > 0) // Filter valid scores and ranks
+      .sort((a, b) => a.rank - b.rank);
   }, [results, alternatives]);
 
   const stats = useMemo(() => {
@@ -116,7 +137,7 @@ export default function Hasil() {
 
   const handleExport = () => {
     const header = "Rank,Nama,Skor\n";
-    const rows = mergedData.map(c => `${c.rank},${c.name},${c.score.toFixed(4)}`).join("\n");
+    const rows = mergedData.map(c => `${c.rank},${c.name},${(c.score || 0).toFixed(4)}`).join("\n");
     const csv = header + rows;
 
     const blob = new Blob([csv], { type: 'text/csv' });
@@ -132,7 +153,10 @@ export default function Hasil() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
+      <Sidebar />
+      <div className="ml-72 min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-gray-100 p-6">
+        <div className="space-y-6">
       {/* HEADER */}
       <section className="bg-white rounded-3xl shadow-card px-8 py-7 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
@@ -215,7 +239,7 @@ export default function Hasil() {
           <div>
             <p className="text-xs text-gray-500">Rata-rata Skor</p>
             <p className="text-xl font-semibold text-purple-600 mt-1">
-              {stats.avgScore.toFixed(2)}
+              {(stats.avgScore || 0).toFixed(2)}
             </p>
           </div>
           <div className="w-9 h-9 rounded-2xl bg-purple-50 flex items-center justify-center">
@@ -256,9 +280,15 @@ export default function Hasil() {
         {/* Content */}
         <div className="px-6 py-5">
           {loading ? (
-            <div className="text-center py-10 text-gray-500">Memuat data...</div>
+            <div className="text-center py-10 text-gray-500">⏳ Memuat data...</div>
           ) : mergedData.length === 0 ? (
-            <div className="text-center py-10 text-gray-500">Belum ada hasil perhitungan. Silakan klik "Hitung Hasil".</div>
+            <div className="text-center py-10">
+              <div className="inline-block p-4 rounded-full bg-gray-100 mb-3">
+                <span className="text-3xl">📊</span>
+              </div>
+              <p className="text-gray-700 font-medium mb-2">Belum ada hasil perhitungan</p>
+              <p className="text-sm text-gray-500">Klik tombol "⚡ Hitung Hasil" untuk memulai perhitungan konsensus</p>
+            </div>
           ) : (
             <>
               {activeTab === "ringkasan" && (
@@ -271,7 +301,9 @@ export default function Hasil() {
           )}
         </div>
       </section>
-    </div>
+        </div>
+      </div>
+    </>
   );
 }
 
@@ -319,7 +351,7 @@ function RingkasanTab({ data }) {
                 </div>
                 <div className="text-right">
                   <p className="text-sm font-semibold text-green-700">
-                    {c.score.toFixed(4)}
+                    {(c.score || 0).toFixed(4)}
                   </p>
                 </div>
               </div>
@@ -342,7 +374,7 @@ function RingkasanTab({ data }) {
                 </div>
               </div>
               <p className="text-sm font-semibold text-gray-600">
-                {c.score.toFixed(4)}
+                {(c.score || 0).toFixed(4)}
               </p>
             </div>
           ))}
@@ -381,7 +413,7 @@ function DetailTab({ data }) {
                 </td>
                 <td className="px-4 py-2 text-xs text-gray-600">{c.role}</td>
                 <td className="px-4 py-2 text-center text-sm font-semibold text-blue-600">
-                  {c.score.toFixed(4)}
+                  {(c.score || 0).toFixed(4)}
                 </td>
                 <td className="px-4 py-2 text-center">
                   {idx < 3 ? (

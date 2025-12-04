@@ -14,6 +14,7 @@ func toCriteriaDTO(criteria *models.Criteria) models.CriteriaDTO {
 		Name:             criteria.Name,
 		Code:             criteria.Code,
 		Type:             criteria.Type,
+		Weight:           criteria.Weight,
 	}
 }
 
@@ -63,6 +64,7 @@ func (s *criteriaService) CreateCriteria(input models.CreateCriteriaInput, proje
 		Name:             input.Name,
 		Code:             input.Code,
 		Type:             input.Type,
+		Weight:           input.Weight,
 		ParentCriteriaID: input.ParentCriteriaID,
 	}
 
@@ -149,6 +151,9 @@ func (s *criteriaService) UpdateCriteria(criteriaID uint, input models.UpdateCri
 	}
 	if input.Type != "" {
 		criteria.Type = input.Type
+	}
+	if input.Weight > 0 {
+		criteria.Weight = input.Weight
 	}
 
 	if err := s.criteriaRepo.UpdateCriteria(criteria); err != nil {

@@ -3,7 +3,6 @@ import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import ProtectedRoute from "./components/ProtectedRoute";
 
 // Import Admin Components
-import TopNav from "./admin/components/TopNav";
 import Beranda from "./admin/pages/Beranda";
 import Dashboard from "./admin/pages/Dashboard";
 import DecisionMaker from "./admin/pages/DecisionMaker";
@@ -24,6 +23,8 @@ import HasilSeleksi from "./dm/HasilSeleksi";
 import SemuaEvaluasi from "./dm/SemuaEvaluasi";
 import DetailKonsensus from "./dm/DetailKonsensus";
 import KandidatCardStatic from "./dm/KandidatCardStatic";
+import HasilDM from "./dm/HasilDM";
+import InputBobotKriteria from "./dm/InputBobotKriteria";
 
 export default function App() {
   const location = useLocation();
@@ -35,16 +36,13 @@ export default function App() {
 
 
   return (
-    <div className="min-h-screen bg-soft">
-
-      {/* Navbar hanya tampil jika BUKAN di login/register */}
-      {!hideNavbar && <TopNav />}
+    <div className="min-h-screen">
 
       <main
         className={
           location.pathname === "/"
             ? "w-full"
-            : `${!hideNavbar ? "pt-32" : "pt-6"} max-w-6xl mx-auto pb-12 px-4`
+            : ""
         }
       >
         <Routes>
@@ -77,10 +75,12 @@ export default function App() {
 
             {/* Evaluasi/Penilaian */}
             <Route path="/dm/penilaian/:projectId/:kandidatId" element={<PenilaianForm />} />
+            <Route path="/dm/bobot-kriteria/:projectId" element={<InputBobotKriteria />} />
             {/* <Route path="/dm/evaluasi-semua" element={<SemuaEvaluasi />} /> */}
 
             {/* Hasil dan Konsensus */}
-            <Route path="/dm/hasil" element={<HasilSeleksi />} />
+            <Route path="/dm/hasil" element={<HasilDM />} />
+            <Route path="/dm/hasil-seleksi" element={<HasilSeleksi />} />
             {/* <Route path="/dm/konsensus-detail" element={<DetailKonsensus />} /> */}
           </Route>
 

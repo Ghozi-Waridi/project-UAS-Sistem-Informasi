@@ -29,13 +29,13 @@ function Navbar() {
                 </li>
                 <li>
                     <NavLink
-                        to="/hasil"
+                        to="/dm/hasil"
                         className={({ isActive }) =>
                             `text-gray-600 hover:text-blue-700 font-semibold text-lg transition-colors duration-200 ${isActive ? "active-nav-link" : ""
                             }`
                         }
                     >
-                        Hasil Seleksi
+                        Hasil
                     </NavLink>
                 </li>
                 {/* Penilaian tidak ada di navbar utama karena diakses dari daftar kandidat */}

@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import TopNav from "../components/TopNav";
 import { isAuthenticated, getCurrentUser } from "../../services/authService";
 import {
   FaRocket, FaGlobe, FaShieldAlt, FaClock, FaCheckCircle,
@@ -65,6 +66,9 @@ export default function Beranda() {
 
   return (
     <div className="min-h-screen bg-white text-slate-900 font-sans selection:bg-cyan-200 selection:text-cyan-900 overflow-x-hidden">
+      
+      {/* TopNav for Landing Page */}
+      <TopNav />
 
       {/* Dynamic Background Gradient Follower */}
       <div

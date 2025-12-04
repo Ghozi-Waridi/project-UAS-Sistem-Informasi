@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
+import Sidebar from "../admin/components/Sidebar";
 import { getAlternativesByProject } from "../services/alternativeService";
 import { getCriteriaByProject } from "../services/criteriaService";
 import { submitScore, getScores } from "../services/evaluationService";
@@ -16,7 +17,7 @@ function PenilaianForm() {
     const [submitting, setSubmitting] = useState(false);
     const [totalScore, setTotalScore] = useState(0);
 
-    // Modal states
+
     const [showModal, setShowModal] = useState(false);
     const [modalConfig, setModalConfig] = useState({
         title: "",
@@ -25,17 +26,17 @@ function PenilaianForm() {
         onConfirm: null
     });
 
-    // Fetch Data
+
     useEffect(() => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                // 1. Fetch Candidate Details (find from list)
+
                 const candidates = await getAlternativesByProject(projectId);
                 const foundCandidate = candidates.find(c => c.alternative_id === parseInt(kandidatId) || c.id === parseInt(kandidatId));
 
                 if (foundCandidate) {
-                    // Parse description
+
                     let details = {};
                     try {
                         details = JSON.parse(foundCandidate.description || "{}");
@@ -49,33 +50,52 @@ function PenilaianForm() {
                     setCandidate({ ...foundCandidate, ...details, initials: foundCandidate.name.substring(0, 2).toUpperCase() });
                 }
 
-                // 2. Get DM assignment to determine method
+
                 const { getAssignedProjects } = await import('../services/projectService');
                 const assignedProjects = await getAssignedProjects();
+                console.log('[PenilaianForm] Assigned projects:', assignedProjects);
+
                 const currentProject = assignedProjects.find(p =>
                     (p.ID || p.project_id) === parseInt(projectId)
                 );
-                const dmMethod = currentProject?.method || 'DIRECT_WEIGHT';
+                console.log('[PenilaianForm] Current project:', currentProject);
 
-                // 3. Fetch Criteria
+                const dmMethod = currentProject?.method || 'TOPSIS';
+                console.log('[PenilaianForm] DM Method:', dmMethod);
+
+
                 const criteriaData = await getCriteriaByProject(projectId);
+                console.log('[PenilaianForm] All criteria from API:', criteriaData);
 
-                // Filter based on DM method:
-                // - AHP_SAW: Show only sub-criteria (needs pairwise comparison)
-                // - TOPSIS/DIRECT_WEIGHT: Show all criteria (direct scoring)
-                let filteredCriteria = criteriaData || [];
-                if (dmMethod === 'AHP_SAW') {
-                    const subCriteria = filteredCriteria.filter(c => c.parent_criteria_id);
-                    // If no sub-criteria exist, show all (fallback)
-                    filteredCriteria = subCriteria.length > 0 ? subCriteria : filteredCriteria;
-                }
-                // For TOPSIS and DIRECT_WEIGHT, show all criteria
+                // TOPSIS uses flat criteria structure (1 level)
+                // No need to filter by parent_criteria_id
+                // Backend returns tree structure, but we flatten it to get all criteria
+                const flattenCriteria = (criteriaTree) => {
+                    const flattened = [];
+                    (criteriaTree || []).forEach(parent => {
+                        flattened.push(parent);
+                        // Also add any sub-criteria if they exist (for backward compatibility)
+                        if (parent.sub_criteria && Array.isArray(parent.sub_criteria) && parent.sub_criteria.length > 0) {
+                            parent.sub_criteria.forEach(sub => {
+                                flattened.push(sub);
+                            });
+                        }
+                    });
+                    return flattened;
+                };
 
-                setCriteriaList(filteredCriteria);
+                const allCriteria = flattenCriteria(criteriaData);
+                console.log('[PenilaianForm] Flattened criteria:', allCriteria);
+                console.log('[PenilaianForm] DM Method:', dmMethod);
+                console.log('[PenilaianForm] Total criteria count:', allCriteria.length);
 
-                // 4. Fetch Existing Scores (if any)
+                // For TOPSIS: show all criteria (flat structure)
+                setCriteriaList(allCriteria);
+                console.log('[PenilaianForm] Criteria to display:', allCriteria);
+
+
                 const existingScores = await getScores(projectId);
-                // Filter for this candidate
+
                 const candidateScores = existingScores.filter(s => s.alternative_id === parseInt(kandidatId));
 
                 const initialScores = {};
@@ -103,13 +123,12 @@ function PenilaianForm() {
         }
     }, [projectId, kandidatId]);
 
-    // Calculate Total Score (Simple Average for now, or based on weights if available)
-    // Note: Real calculation happens on backend usually, but we can show estimate
+
     useEffect(() => {
         if (criteriaList.length === 0) return;
 
-        // Assuming equal weight if not specified, or use criteria weight if available
-        // For now, just average of filled scores
+
+
         const filledScores = Object.values(scores);
         if (filledScores.length > 0) {
             const sum = filledScores.reduce((a, b) => a + b, 0);
@@ -130,9 +149,9 @@ function PenilaianForm() {
         e.preventDefault();
         setSubmitting(true);
         try {
-            // Submit each score
-            // We use singular submitScore for each criteria to ensure granular updates
-            // Or we could use batch submitScores if backend supports it efficiently
+
+
+
 
             const promises = Object.keys(scores).map(criteriaId => {
                 return submitScore(projectId, {
@@ -172,8 +191,10 @@ function PenilaianForm() {
     if (!candidate) return <div className="p-8 text-center">Kandidat tidak ditemukan.</div>;
 
     return (
-        <div className="min-h-screen bg-gray-100 p-8">
-            <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
+        <>
+            <Sidebar />
+            <div className="ml-72 min-h-screen bg-gray-100 p-8">
+                <div className="max-w-3xl mx-auto bg-white rounded-lg shadow-md overflow-hidden">
                 {/* Header */}
                 <div className="p-6 border-b border-gray-200">
                     <h1 className="text-2xl font-bold text-gray-800 mb-1">Evaluasi Kandidat</h1>
@@ -280,6 +301,7 @@ function PenilaianForm() {
                 type={modalConfig.type}
             />
         </div>
+        </>
     );
 }
 

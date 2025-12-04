@@ -6,27 +6,8 @@ export default function CriteriaForm({ projectId, initialData, onClose, onSucces
       name: "",
       code: "",
       type: "benefit",
-      parent_criteria_id: null
+      weight: 0
    });
-   const [existingCriteria, setExistingCriteria] = useState([]);
-   const [loading, setLoading] = useState(true);
-
-   // Fetch existing criteria for parent selection
-   useEffect(() => {
-      const fetchCriteria = async () => {
-         try {
-            const criteria = await getCriteriaByProject(projectId);
-            // Only show parent criteria (criteria without parent) as options
-            const parentCriteria = criteria.filter(c => !c.parent_criteria_id);
-            setExistingCriteria(parentCriteria);
-         } catch (error) {
-            console.error("Failed to fetch criteria:", error);
-         } finally {
-            setLoading(false);
-         }
-      };
-      fetchCriteria();
-   }, [projectId]);
 
    useEffect(() => {
       if (initialData) {
@@ -34,19 +15,27 @@ export default function CriteriaForm({ projectId, initialData, onClose, onSucces
             name: initialData.name || "",
             code: initialData.code || "",
             type: initialData.type || "benefit",
-            parent_criteria_id: initialData.parent_criteria_id || null
+            weight: initialData.weight || 0
          });
       }
    }, [initialData]);
 
    const handleSubmit = async (e) => {
       e.preventDefault();
+      
+      // Validasi bobot
+      const weight = parseFloat(formData.weight);
+      if (weight < 0 || weight > 1) {
+         alert("Bobot harus antara 0 dan 1");
+         return;
+      }
+      
       try {
          const dataToSend = {
             name: formData.name,
             code: formData.code,
             type: formData.type,
-            ...(formData.parent_criteria_id && { parent_criteria_id: parseInt(formData.parent_criteria_id) })
+            weight: weight
          };
 
          if (initialData) {
@@ -100,26 +89,26 @@ export default function CriteriaForm({ projectId, initialData, onClose, onSucces
                   </select>
                </div>
 
-               {/* Parent Criteria Selection */}
                <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                     Parent Criteria (Opsional)
+                     Bobot Kriteria (0-1) *
                   </label>
-                  <select
+                  <input
+                     type="number"
+                     step="0.01"
+                     min="0"
+                     max="1"
                      className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none"
-                     value={formData.parent_criteria_id || ""}
-                     onChange={(e) => setFormData({ ...formData, parent_criteria_id: e.target.value || null })}
-                     disabled={loading}
-                  >
-                     <option value="">-- Kriteria Utama (Tanpa Parent) --</option>
-                     {existingCriteria.map(c => (
-                        <option key={c.criteria_id} value={c.criteria_id}>
-                           {c.code ? `${c.code} - ${c.name}` : c.name}
-                        </option>
-                     ))}
-                  </select>
+                     value={formData.weight}
+                     onChange={(e) => setFormData({ ...formData, weight: e.target.value })}
+                     required
+                     placeholder="Contoh: 0.25"
+                  />
                   <p className="text-xs text-gray-500 mt-1">
-                     Pilih parent jika ini adalah sub-kriteria. Kosongkan untuk kriteria utama.
+                     Bobot menentukan kepentingan kriteria. Pastikan total semua bobot = 1.0
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">
+                     {formData.weight ? `${(parseFloat(formData.weight) * 100).toFixed(0)}%` : '0%'}
                   </p>
                </div>
 

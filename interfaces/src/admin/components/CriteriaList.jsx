@@ -50,6 +50,7 @@ export default function CriteriaList({ projectId, onEdit }) {
                      <th className="py-2 text-left">Nama</th>
                      <th className="py-2 text-left">Kode</th>
                      <th className="py-2 text-left">Tipe</th>
+                     <th className="py-2 text-left">Bobot</th>
                      <th className="py-2 text-right">Aksi</th>
                   </tr>
                </thead>
@@ -62,6 +63,11 @@ export default function CriteriaList({ projectId, onEdit }) {
                            <td className="py-3">
                               <span className={`px-2 py-1 rounded text-xs font-semibold ${c.type === 'benefit' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
                                  {c.type}
+                              </span>
+                           </td>
+                           <td className="py-3">
+                              <span className="text-blue-600 font-semibold">
+                                 {c.weight || '0'} <span className="text-xs text-gray-500">({((c.weight || 0) * 100).toFixed(0)}%)</span>
                               </span>
                            </td>
                            <td className="py-3 text-right">
@@ -82,7 +88,7 @@ export default function CriteriaList({ projectId, onEdit }) {
                      ))
                   ) : (
                      <tr>
-                        <td colSpan="4" className="py-4 text-center text-gray-500">
+                        <td colSpan="5" className="py-4 text-center text-gray-500">
                            Belum ada kriteria.
                         </td>
                      </tr>
