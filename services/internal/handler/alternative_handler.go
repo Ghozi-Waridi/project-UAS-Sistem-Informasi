@@ -12,6 +12,8 @@ import (
 type AlternativeHandler interface {
 	CreateAlternative(c *gin.Context)
 	GetAlternativeByProject(c *gin.Context)
+	UpdateAlternative(c *gin.Context)
+	DeleteAlternative(c *gin.Context)
 }
 
 type alternativeHandler struct {
@@ -71,10 +73,17 @@ func (h *alternativeHandler) GetAlternativeByProject(c *gin.Context) {
 		return
 	}
 	companyID, _ := c.Get("companyID")
+	userID, _ := c.Get("userID")
+	role, _ := c.Get("role")
 
-	alternativeDTOs, err := h.alternativeService.GetAlternativeByProject(uint(projectID), companyID.(uint))
+	alternativeDTOs, err := h.alternativeService.GetAlternativeByProject(
+		uint(projectID),
+		companyID.(uint),
+		userID.(uint),
+		role.(string),
+	)
 	if err != nil {
-		if err.Error() == "project not found or user does not have access" {
+		if err.Error() == "project not found or user does not have access" || err.Error() == "Project no found or user does not have access" {
 			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
 			return
 		}
@@ -82,4 +91,93 @@ func (h *alternativeHandler) GetAlternativeByProject(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, alternativeDTOs)
+}
+
+func (h *alternativeHandler) UpdateAlternative(c *gin.Context) {
+	projectIDStr := c.Param("projectID")
+	projectID, err := strconv.ParseUint(projectIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID format"})
+		return
+	}
+
+	alternativeIDStr := c.Param("alternativeID")
+	alternativeID, err := strconv.Atoi(alternativeIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid alternative ID"})
+		return
+	}
+
+	var input models.UpdateAlternativeInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	companyID, _ := c.Get("companyID")
+	role, _ := c.Get("role")
+
+	alternativeDTO, err := h.alternativeService.UpdateAlternative(
+		uint(alternativeID),
+		input,
+		uint(projectID),
+		companyID.(uint),
+		role.(string),
+	)
+
+	if err != nil {
+		if err.Error() == "only admin can update alternative" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "project not found or user does not have access" || err.Error() == "alternative does not belong to this project" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, alternativeDTO)
+}
+
+func (h *alternativeHandler) DeleteAlternative(c *gin.Context) {
+	projectIDStr := c.Param("projectID")
+	projectID, err := strconv.ParseUint(projectIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID format"})
+		return
+	}
+
+	alternativeIDStr := c.Param("alternativeID")
+	alternativeID, err := strconv.Atoi(alternativeIDStr)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid alternative ID"})
+		return
+	}
+
+	companyID, _ := c.Get("companyID")
+	role, _ := c.Get("role")
+
+	err = h.alternativeService.DeleteAlternative(
+		uint(alternativeID),
+		uint(projectID),
+		companyID.(uint),
+		role.(string),
+	)
+
+	if err != nil {
+		if err.Error() == "only admin can delete alternative" {
+			c.JSON(http.StatusForbidden, gin.H{"error": err.Error()})
+			return
+		}
+		if err.Error() == "project not found or user does not have access" || err.Error() == "alternative does not belong to this project" {
+			c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Alternative deleted successfully"})
 }

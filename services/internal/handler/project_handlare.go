@@ -14,6 +14,9 @@ type ProjectHandler interface {
 	CreateProject(c *gin.Context)
 	GetProjectByID(c *gin.Context)
 	GetProjectsByCompany(c *gin.Context)
+	UpdateProject(c *gin.Context)
+	DeleteProject(c *gin.Context)
+	GetAssignedProjects(c *gin.Context)
 }
 
 type projectHandler struct {
@@ -93,6 +96,93 @@ func (h *projectHandler) GetProjectsByCompany(c *gin.Context) {
 	}
 
 	projectDTOs, err := h.projectService.GetProjectsByCompany(companyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, projectDTOs)
+}
+
+func (h *projectHandler) UpdateProject(c *gin.Context) {
+	projectIDStr := c.Param("projectID")
+	projectID, err := strconv.ParseUint(projectIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID format"})
+		return
+	}
+
+	var input models.UpdateProjectInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	_, companyID, role, err := extractUserData(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user data"})
+		return
+	}
+
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can update projects"})
+		return
+	}
+
+	projectDTO, err := h.projectService.UpdateProject(uint(projectID), input, companyID)
+	if err != nil {
+		if err.Error() == "record not found" {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Project not found or you do not have permission"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, projectDTO)
+}
+
+func (h *projectHandler) DeleteProject(c *gin.Context) {
+	projectIDStr := c.Param("projectID")
+	projectID, err := strconv.ParseUint(projectIDStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid project ID format"})
+		return
+	}
+
+	_, companyID, role, err := extractUserData(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user data"})
+		return
+	}
+
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can delete projects"})
+		return
+	}
+
+	err = h.projectService.DeleteProject(uint(projectID), companyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Project deleted successfully"})
+}
+
+func (h *projectHandler) GetAssignedProjects(c *gin.Context) {
+	userID, _, role, err := extractUserData(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user data"})
+		return
+	}
+
+	if role != "dm" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only Decision Makers can view assigned projects"})
+		return
+	}
+
+	projectDTOs, err := h.projectService.GetAssignedProjects(userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

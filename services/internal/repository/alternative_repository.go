@@ -9,6 +9,9 @@ import (
 type AlternativeRepository interface {
 	CreateAlternative(alternative *models.Alternative) error
 	GetAlternativeByProject(projectID uint) ([]models.Alternative, error)
+	GetAlternativeByID(alternativeID uint) (*models.Alternative, error)
+	UpdateAlternative(alternative *models.Alternative) error
+	DeleteAlternative(alternativeID uint) error
 }
 
 type alternativeRrepository struct {
@@ -33,4 +36,21 @@ func (r *alternativeRrepository) GetAlternativeByProject(projectID uint) ([]mode
 		return nil, err
 	}
 	return alternatives, nil
+}
+
+func (r *alternativeRrepository) GetAlternativeByID(alternativeID uint) (*models.Alternative, error) {
+	var alternative models.Alternative
+	err := r.db.First(&alternative, alternativeID).Error
+	if err != nil {
+		return nil, err
+	}
+	return &alternative, nil
+}
+
+func (r *alternativeRrepository) UpdateAlternative(alternative *models.Alternative) error {
+	return r.db.Save(alternative).Error
+}
+
+func (r *alternativeRrepository) DeleteAlternative(alternativeID uint) error {
+	return r.db.Delete(&models.Alternative{}, alternativeID).Error
 }

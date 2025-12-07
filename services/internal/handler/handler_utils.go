@@ -33,3 +33,13 @@ func getProjectIDFromParam(c *gin.Context) (uint, error) {
 	}
 	return uint(projectID), nil
 }
+
+func getIDFromParam(c *gin.Context, paramName string) (uint, error) {
+	idStr := c.Param(paramName)
+	id, err := strconv.ParseUint(idStr, 10, 32)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format for " + paramName})
+		return 0, err
+	}
+	return uint(id), nil
+}

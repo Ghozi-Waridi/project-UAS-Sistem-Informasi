@@ -1,16 +1,19 @@
+
+
 package calculations
 
 import (
 	"errors"
+	"log"
 	"math"
 	"services/internal/models"
-
 	"sort"
 )
 
 type TOPSISRank struct {
 	AlternativeID uint
 	FinalScore    float64
+	Rank          int // Ranking per DM (1,2,3,...)
 }
 
 type TOPSISCalculator interface {
@@ -36,9 +39,10 @@ func (calc *topsisCalculator) CalculateRanking(
 ) ([]TOPSISRank, error) {
 
 	if len(criteria) == 0 || len(alternatives) == 0 || len(scores) == 0 {
-		return nil, errors.New("TOPSIS: data kriteria, alternatif, atau skor tidak lengkap")
+		return nil, errors.New("TOPSIS: data tidak lengkap")
 	}
 
+	// 1. Build matrices
 	criteriaMap := make(map[uint]models.Criteria)
 	for _, c := range criteria {
 		criteriaMap[c.CriteriaID] = c
@@ -54,12 +58,9 @@ func (calc *topsisCalculator) CalculateRanking(
 		}
 	}
 
+	// 2. Normalization (R matrix) - SESUAI EXCEL
 	normFactors := make(map[uint]float64)
 	for _, c := range criteria {
-		if c.ParentCriteriaID == nil {
-			continue
-		}
-
 		sumOfSquares := 0.0
 		for _, a := range alternatives {
 			score := scoreMatrix[a.AlternativeID][c.CriteriaID]
@@ -68,120 +69,111 @@ func (calc *topsisCalculator) CalculateRanking(
 		normFactors[c.CriteriaID] = math.Sqrt(sumOfSquares)
 	}
 
-	normalizedMatrix := make(map[uint]map[uint]float64)
-	for _, a := range alternatives {
-		normalizedMatrix[a.AlternativeID] = make(map[uint]float64)
-		for _, c := range criteria {
-			if c.ParentCriteriaID == nil {
-				continue
-			}
+	// R: Normalized matrix
+	R := make(map[uint]map[uint]float64)
+	// Y: Weighted normalized matrix
+	Y := make(map[uint]map[uint]float64)
 
+	for _, a := range alternatives {
+		R[a.AlternativeID] = make(map[uint]float64)
+		Y[a.AlternativeID] = make(map[uint]float64)
+		for _, c := range criteria {
 			score := scoreMatrix[a.AlternativeID][c.CriteriaID]
 			factor := normFactors[c.CriteriaID]
 
-			if factor == 0 {
-				normalizedMatrix[a.AlternativeID][c.CriteriaID] = 0
-			} else {
-				normalizedMatrix[a.AlternativeID][c.CriteriaID] = score / factor
+			var r_ij float64
+			if factor != 0 {
+				r_ij = score / factor
 			}
+			R[a.AlternativeID][c.CriteriaID] = r_ij
+
+			// Weighted: y_ij = r_ij * w_j
+			w_j := weights[c.CriteriaID]
+			Y[a.AlternativeID][c.CriteriaID] = r_ij * w_j
 		}
 	}
 
-	weightedMatrix := make(map[uint]map[uint]float64)
-	for _, a := range alternatives {
-		weightedMatrix[a.AlternativeID] = make(map[uint]float64)
-		for _, c := range criteria {
-			if c.ParentCriteriaID == nil {
-				continue
-			}
-
-			r_ij := normalizedMatrix[a.AlternativeID][c.CriteriaID]
-			w_j, ok := weights[c.CriteriaID]
-			if !ok {
-				w_j = 0
-			}
-			weightedMatrix[a.AlternativeID][c.CriteriaID] = r_ij * w_j
-		}
-	}
-
-	pisMap := make(map[uint]float64)
-	nisMap := make(map[uint]float64)
+	// 3. Determine A+ and A- from Y matrix (SESUAI EXCEL)
+	A_plus := make(map[uint]float64)
+	A_minus := make(map[uint]float64)
 
 	for _, c := range criteria {
-		if c.ParentCriteriaID == nil {
-			continue
-		}
-
 		var max, min float64
-		isFirst := true
+		first := true
 
 		for _, a := range alternatives {
-			v_ij := weightedMatrix[a.AlternativeID][c.CriteriaID]
-			if isFirst {
-				max = v_ij
-				min = v_ij
-				isFirst = false
+			y_ij := Y[a.AlternativeID][c.CriteriaID]
+			if first {
+				max = y_ij
+				min = y_ij
+				first = false
 			}
-			if v_ij > max {
-				max = v_ij
+			if y_ij > max {
+				max = y_ij
 			}
-			if v_ij < min {
-				min = v_ij
+			if y_ij < min {
+				min = y_ij
 			}
 		}
 
-		// Logika terbalik untuk benefit vs cost
 		if c.Type == "benefit" {
-			pisMap[c.CriteriaID] = max
-			nisMap[c.CriteriaID] = min
-		} else if c.Type == "cost" {
-			pisMap[c.CriteriaID] = min
-			nisMap[c.CriteriaID] = max
+			A_plus[c.CriteriaID] = max
+			A_minus[c.CriteriaID] = min
+		} else { // cost
+			A_plus[c.CriteriaID] = min
+			A_minus[c.CriteriaID] = max
 		}
 	}
 
-	dPlusMap := make(map[uint]float64)
-	dMinusMap := make(map[uint]float64)
+	// 4. Calculate distances D+ and D- using R matrix (SESUAI EXCEL)
+	D_plus := make(map[uint]float64)
+	D_minus := make(map[uint]float64)
 
 	for _, a := range alternatives {
-		var sumSqPlus, sumSqMinus float64
+		sumSqPlus := 0.0
+		sumSqMinus := 0.0
+
 		for _, c := range criteria {
-			if c.ParentCriteriaID == nil {
-				continue
-			}
+			r_ij := R[a.AlternativeID][c.CriteriaID]
+			a_plus := A_plus[c.CriteriaID]
+			a_minus := A_minus[c.CriteriaID]
 
-			v_ij := weightedMatrix[a.AlternativeID][c.CriteriaID]
-			s_plus := pisMap[c.CriteriaID]
-			s_minus := nisMap[c.CriteriaID]
-
-			sumSqPlus += math.Pow(s_plus-v_ij, 2)
-			sumSqMinus += math.Pow(s_minus-v_ij, 2)
+			// SESUAI EXCEL: D+ = √(Σ(A+ - R)²)
+			sumSqPlus += math.Pow(a_plus-r_ij, 2)
+			sumSqMinus += math.Pow(a_minus-r_ij, 2)
 		}
-		dPlusMap[a.AlternativeID] = math.Sqrt(sumSqPlus)
-		dMinusMap[a.AlternativeID] = math.Sqrt(sumSqMinus)
+
+		D_plus[a.AlternativeID] = math.Sqrt(sumSqPlus)
+		D_minus[a.AlternativeID] = math.Sqrt(sumSqMinus)
 	}
 
-	var finalRanks []TOPSISRank
+	// 5. Calculate final score C_i
+	var results []TOPSISRank
 	for _, a := range alternatives {
-		dPlus := dPlusMap[a.AlternativeID]
-		dMinus := dMinusMap[a.AlternativeID]
+		dPlus := D_plus[a.AlternativeID]
+		dMinus := D_minus[a.AlternativeID]
 
-		var c_i float64
-		if (dMinus + dPlus) == 0 {
-			c_i = 0
-		} else {
-			c_i = dMinus / (dMinus + dPlus)
+		var C_i float64
+		if (dMinus + dPlus) != 0 {
+			C_i = dMinus / (dMinus + dPlus)
 		}
 
-		finalRanks = append(finalRanks, TOPSISRank{
+		results = append(results, TOPSISRank{
 			AlternativeID: a.AlternativeID,
-			FinalScore:    c_i,
+			FinalScore:    C_i,
 		})
 	}
 
-	sort.Slice(finalRanks, func(i, j int) bool {
-		return finalRanks[i].FinalScore > finalRanks[j].FinalScore
+	// Sort by FinalScore descending
+	sort.Slice(results, func(i, j int) bool {
+		return results[i].FinalScore > results[j].FinalScore
 	})
 
-	return finalRanks, nil
+	// Log results
+	log.Println("=== TOPSIS FINAL RANKING ===")
+	for i, r := range results {
+		log.Printf("Rank %d: Alt ID %d, Score: %.4f", i+1, r.AlternativeID, r.FinalScore)
+	}
+
+	return results, nil
 }

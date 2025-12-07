@@ -12,6 +12,7 @@ import (
 type Userhandler interface {
 	GetUserProfile(c *gin.Context)
 	CreateDM(c *gin.Context)
+	GetDMs(c *gin.Context)
 }
 
 type userHandler struct {
@@ -76,4 +77,25 @@ func (h *userHandler) CreateDM(c *gin.Context) {
 
 	// 5. Sukses
 	c.JSON(http.StatusCreated, userDTO)
+}
+
+func (h *userHandler) GetDMs(c *gin.Context) {
+	_, companyID, role, err := extractUserData(c)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to process user data"})
+		return
+	}
+
+	if role != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only admins can view DMs"})
+		return
+	}
+
+	dms, err := h.userService.GetDMs(companyID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, dms)
 }
