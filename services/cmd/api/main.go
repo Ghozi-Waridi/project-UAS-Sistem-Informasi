@@ -51,8 +51,7 @@ func main() {
 	inputScoreRepository := repository.NewInputScoreRepository(db)
 	resultRepository := repository.NewResultRankingRepository(db)
 
-	ahpCalc := calculations.NewAHPCalculator()
-	sawCalc := calculations.NewSAWCalculator()
+
 	topsisCalc := calculations.NewTOPSISCalculator()
 	bordaCalc := calculations.NewBordaCalculator()
 
@@ -67,7 +66,7 @@ func main() {
 	decisionService := service.NewDecisionService(
 		projectRepository, criteriarepository, alternativeRepository, project_dm_repository,
 		inputDirectWeightRepository, inputScoreRepository, resultRepository,
-		ahpCalc, sawCalc, topsisCalc, bordaCalc,
+		 topsisCalc, bordaCalc,
 	)
 
 	authHandler := handler.NewAuthHandler(authService)

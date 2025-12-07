@@ -85,7 +85,7 @@ type CriteriaDTO struct {
 	ParentCriteriaID *uint         `json:"parent_criteria_id,omitempty"`
 	Name             string        `json:"name"`
 	Code             string        `json:"code"`
-	Type             string        `string:"type"`
+	Type             string        `json:"type"`
 	Weight           float64       `json:"weight"`
 	SubCriteria      []CriteriaDTO `json:"sub_criteria,omitempty"`
 }
@@ -148,7 +148,7 @@ type SubmitDirectWeightsInput struct {
 type ScoreInputItem struct {
 	AlternativeID uint    `json:"alternative_id" binding:"required"`
 	CriteriaID    uint    `json:"criteria_id" binding:"required"`
-	ScoreValue    float64 `json:"score_value" binding:"required,gte=0"`
+	ScoreValue    float64 `json:"score_value" binding:"gte=0"`
 }
 
 type SubmitScoreInput struct {

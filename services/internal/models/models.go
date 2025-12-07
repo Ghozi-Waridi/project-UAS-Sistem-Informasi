@@ -83,10 +83,11 @@ type ProjectDecisionMaker struct {
 }
 
 type DMInputScore struct {
-	ScoreID       uint    `gorm:"primaryKey;column:score_id" json:"score_id"`
-	ProjectDMID   uint    `gorm:"not null;column:project_dm_id" json:"project_dm_id"`
-	AlternativeID uint    `gorm:"not null;column:alternative_id" json:"alternative_id"`
-	CriteriaID    uint    `gorm:"not null;column:criteria_id" json:"criteria_id"`
+	ScoreID uint `gorm:"primaryKey;column:score_id" json:"score_id"`
+	// Tambahkan uniqueIndex agar 1 DM hanya bisa memberi 1 Nilai untuk 1 Kriteria pada 1 Alternatif
+	ProjectDMID   uint    `gorm:"not null;column:project_dm_id;uniqueIndex:idx_score_dm_alt_crit" json:"project_dm_id"`
+	AlternativeID uint    `gorm:"not null;column:alternative_id;uniqueIndex:idx_score_dm_alt_crit" json:"alternative_id"`
+	CriteriaID    uint    `gorm:"not null;column:criteria_id;uniqueIndex:idx_score_dm_alt_crit" json:"criteria_id"`
 	ScoreValue    float64 `gorm:"type:decimal(10,4);not null;column:score_value" json:"score_value"`
 
 	ProjectDecisionMaker ProjectDecisionMaker `gorm:"foreignKey:ProjectDMID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
@@ -134,12 +135,16 @@ func (DMInputDirectWeight) TableName() string {
 }
 
 type ResultRanking struct {
-	ResultID      uint    `gorm:"primaryKey;column:result_id" json:"result_id"`
-	ProjectID     uint    `gorm:"not null;column:project_id" json:"project_id"`
-	AlternativeID uint    `gorm:"not null;column:alternative_id" json:"alternative_id"`
-	ProjectDMID   *uint   `gorm:"column:project_dm_id" json:"project_dm_id"`
-	FinalScore    float64 `gorm:"type:decimal(10,6);not null;column:final_score" json:"final_score"`
-	Rank          int     `gorm:"not null;column:rank" json:"rank"`
+	ResultID uint `gorm:"primaryKey;column:result_id" json:"result_id"`
+	// Tambahkan uniqueIndex:
+	// Kombinasi Project + Alternatif + DM (bisa NULL) harus unik.
+	// Artinya: Satu alternatif hanya boleh punya satu ranking final (DM=NULL) atau satu ranking per DM.
+	ProjectID     uint  `gorm:"not null;column:project_id;uniqueIndex:idx_result_proj_alt_dm" json:"project_id"`
+	AlternativeID uint  `gorm:"not null;column:alternative_id;uniqueIndex:idx_result_proj_alt_dm" json:"alternative_id"`
+	ProjectDMID   *uint `gorm:"column:project_dm_id;uniqueIndex:idx_result_proj_alt_dm" json:"project_dm_id"`
+
+	FinalScore float64 `gorm:"type:decimal(10,6);not null;column:final_score" json:"final_score"`
+	Rank       int     `gorm:"not null;column:rank" json:"rank"`
 
 	DecisionProject      DecisionProject       `gorm:"foreignKey:ProjectID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`
 	Alternative          Alternative           `gorm:"foreignKey:AlternativeID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE;" json:"-"`

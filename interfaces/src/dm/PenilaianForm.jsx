@@ -85,6 +85,7 @@ function PenilaianForm() {
                 };
 
                 const allCriteria = flattenCriteria(criteriaData);
+                
                 console.log('[PenilaianForm] Flattened criteria:', allCriteria);
                 console.log('[PenilaianForm] DM Method:', dmMethod);
                 console.log('[PenilaianForm] Total criteria count:', allCriteria.length);
@@ -127,12 +128,26 @@ function PenilaianForm() {
     useEffect(() => {
         if (criteriaList.length === 0) return;
 
-
-
-        const filledScores = Object.values(scores);
+        // Calculate weighted average based on criteria type
+        const filledScores = Object.entries(scores);
         if (filledScores.length > 0) {
-            const sum = filledScores.reduce((a, b) => a + b, 0);
-            setTotalScore((sum / filledScores.length).toFixed(1));
+            // Normalize scores to percentage for display
+            let totalPercentage = 0;
+            let count = 0;
+            
+            filledScores.forEach(([criteriaId, scoreValue]) => {
+                const criteria = criteriaList.find(c => (c.criteria_id || c.id) === parseInt(criteriaId));
+                if (criteria) {
+                    const isCost = criteria.type?.toLowerCase() === 'cost';
+                    const maxScore = isCost ? 3 : 100;
+                    // Convert to percentage (0-100%)
+                    const percentage = (scoreValue / maxScore) * 100;
+                    totalPercentage += percentage;
+                    count++;
+                }
+            });
+            
+            setTotalScore((totalPercentage / count).toFixed(1));
         } else {
             setTotalScore(0);
         }
@@ -230,43 +245,90 @@ function PenilaianForm() {
                         <h2 className="text-xl font-bold text-gray-800 mb-4">Kriteria Penilaian</h2>
                         <p className="text-gray-500 text-sm mb-6">Berikan skor 1-10 untuk setiap kriteria evaluasi</p>
 
-                        {criteriaList.map((criteria) => (
-                            <div key={criteria.criteria_id || criteria.id} className="mb-6 pb-4 border-b border-gray-200 last:border-b-0">
-                                <div className="flex justify-between items-center mb-3">
-                                    <label className="block text-md font-semibold text-gray-700 capitalize">
-                                        {criteria.name}
-                                    </label>
-                                    <span className="text-gray-600 text-sm">Type: {criteria.type}</span>
-                                </div>
-                                <div className="flex justify-between items-center">
-                                    <div className="flex space-x-2">
-                                        {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((num) => (
-                                            <button
-                                                key={num}
-                                                type="button"
-                                                className={`w-10 h-10 rounded-full flex items-center justify-center border transition-colors ${scores[criteria.criteria_id || criteria.id] === num
-                                                    ? "bg-blue-600 text-white border-blue-600 shadow"
-                                                    : "bg-white text-gray-700 border-gray-300 hover:bg-blue-50"
-                                                    }`}
-                                                onClick={() => handleScoreChange(criteria.criteria_id || criteria.id, num)}
-                                            >
-                                                {num}
-                                            </button>
-                                        ))}
+                        {criteriaList.map((criteria) => {
+                            const isCost = criteria.type?.toLowerCase() === 'cost';
+                            console.log(`[PenilaianForm] Rendering criteria: ${criteria.name} (Type: ${criteria.type})`);
+                            const scoreOptions = isCost ? [0, 1, 2, 3] : [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+                            const maxScore = isCost ? 3 : 100;
+                            const currentScore = scores[criteria.criteria_id || criteria.id] || 0;
+
+                            return (
+                                <div key={criteria.criteria_id || criteria.id} className="mb-6 pb-4 border-b border-gray-200 last:border-b-0">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <label className="block text-md font-semibold text-gray-700 capitalize">
+                                            {criteria.name}
+                                        </label>
+                                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                            isCost 
+                                                ? 'bg-red-100 text-red-700' 
+                                                : 'bg-green-100 text-green-700'
+                                        }`}>
+                                            {criteria.type} ({isCost ? '1-3' : '10-100'})
+                                        </span>
                                     </div>
-                                    <div className="text-xl font-bold text-gray-800">
-                                        {scores[criteria.criteria_id || criteria.id] || 0}<span className="text-gray-500">/10</span>
-                                    </div>
+                                    
+                                    {isCost ? (
+                                        // Cost criteria: 1-3 scale with buttons
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex space-x-4">
+                                                {scoreOptions.map((num) => (
+                                                    <button
+                                                        key={num}
+                                                        type="button"
+                                                        className={`w-16 h-16 rounded-lg flex items-center justify-center border-2 transition-all font-semibold text-lg ${
+                                                            currentScore === num
+                                                                ? "bg-red-600 text-white border-red-600 shadow-lg scale-105"
+                                                                : "bg-white text-gray-700 border-gray-300 hover:bg-red-50 hover:border-red-300"
+                                                        }`}
+                                                        onClick={() => handleScoreChange(criteria.criteria_id || criteria.id, num)}
+                                                    >
+                                                        {num}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="text-2xl font-bold text-gray-800">
+                                                {currentScore}<span className="text-gray-500">/{maxScore}</span>
+                                            </div>
+                                        </div>
+                                    ) : (
+                                        // Benefit criteria: 10-100 scale with buttons
+                                        <div className="space-y-3">
+                                            <div className="flex flex-wrap gap-2">
+                                                {scoreOptions.map((num) => (
+                                                    <button
+                                                        key={num}
+                                                        type="button"
+                                                        className={`w-16 h-12 rounded-md flex items-center justify-center border transition-all font-semibold ${
+                                                            currentScore === num
+                                                                ? "bg-green-600 text-white border-green-600 shadow-md scale-105"
+                                                                : "bg-white text-gray-700 border-gray-300 hover:bg-green-50 hover:border-green-300"
+                                                        }`}
+                                                        onClick={() => handleScoreChange(criteria.criteria_id || criteria.id, num)}
+                                                    >
+                                                        {num}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <div className="text-xl font-bold text-gray-800">
+                                                Selected: {currentScore}<span className="text-gray-500">/{maxScore}</span>
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    <p className="text-xs text-gray-400 mt-2">
+                                        {isCost 
+                                            ? '1 = Biaya Rendah (Terbaik), 2 = Sedang, 3 = Tinggi (Terburuk)' 
+                                            : '10 = Sangat Kurang, 100 = Sangat Baik'}
+                                    </p>
                                 </div>
-                                <p className="text-xs text-gray-400 mt-2">Sangat Kurang - Sangat Baik</p>
-                            </div>
-                        ))}
+                            );
+                        })}
 
                         {/* Total Skor Estimate */}
                         <div className="flex justify-between items-center bg-blue-50 p-4 rounded-md mt-6">
-                            <h3 className="text-lg font-semibold text-blue-800">Estimasi Rata-rata</h3>
+                            <h3 className="text-lg font-semibold text-blue-800">Estimasi Rata-rata (Normalized %)</h3>
                             <div className="text-2xl font-bold text-blue-800">
-                                {totalScore}<span className="text-blue-600">/10.0</span>
+                                {totalScore}<span className="text-blue-600">%</span>
                             </div>
                         </div>
                     </div>
