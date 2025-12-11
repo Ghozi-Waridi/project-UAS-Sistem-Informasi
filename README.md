@@ -4,7 +4,7 @@ Sistem Pendukung Keputusan Kelompok yang mengintegrasikan panel Admin dan Decisi
 
 ![Tech Stack](https://img.shields.io/badge/React-19-blue)
 ![Tech Stack](https://img.shields.io/badge/Go-1.24-00ADD8)
-![Tech Stack](https://img.shields.io/badge/PostgreSQL-Database-336791)
+![Tech Stack](https://img.shields.io/badge/Supabase-Database-3ECF8E)
 ![Tech Stack](https://img.shields.io/badge/Vite-7-646CFF)
 ![Tech Stack](https://img.shields.io/badge/TailwindCSS-4-38B2AC)
 
@@ -52,7 +52,7 @@ GDSS Pro adalah aplikasi web full-stack untuk mendukung proses pengambilan keput
 - **Go 1.24** - High-performance backend
 - **Gin** - Web framework
 - **GORM** - ORM for database operations
-- **PostgreSQL** - Relational database
+- **Supabase** - Cloud database (PostgreSQL)
 - **JWT** - Secure authentication
 - **bcrypt** - Password hashing
 
@@ -66,119 +66,164 @@ GDSS Pro adalah aplikasi web full-stack untuk mendukung proses pengambilan keput
 
 ## 📥 Instalasi Lengkap dari Awal
 
+> 📋 **Panduan ini dibuat untuk memudahkan dosen menjalankan aplikasi dari awal. Setiap langkah dijelaskan secara detail.**
+
 ### 1. Instalasi Software yang Diperlukan
 
-#### A. Install Node.js (untuk Frontend)
+#### A. Install Node.js dan NPM (untuk Frontend React)
 
-**macOS:**
+**Apa itu Node.js dan NPM?**
+
+- **Node.js**: Runtime JavaScript yang memungkinkan menjalankan JavaScript di luar browser
+- **NPM**: Package manager untuk menginstall library/dependencies yang dibutuhkan React
+
+**Langkah Instalasi di Windows (Paling Umum):**
+
+1. **Download Node.js:**
+
+   - Buka browser, kunjungi: https://nodejs.org/
+   - Klik tombol hijau besar **"Download Node.js (LTS)"**
+   - LTS = Long Term Support (versi stabil yang direkomendasikan)
+   - File yang didownload: `node-vXX.XX.XX-x64.msi` (sekitar 30-40 MB)
+
+2. **Install Node.js:**
+
+   - Double-click file installer yang sudah didownload
+   - Klik **"Next"** di welcome screen
+   - **Centang** "I accept the terms in the License Agreement" → Klik **"Next"**
+   - Pilih lokasi instalasi (biarkan default: `C:\Program Files\nodejs\`) → Klik **"Next"**
+   - Di halaman "Custom Setup", **biarkan semua tercentang** (termasuk "Add to PATH") → Klik **"Next"**
+   - Di halaman "Tools for Native Modules", **tidak perlu centang** → Klik **"Next"**
+   - Klik **"Install"** dan tunggu proses selesai
+   - Klik **"Finish"**
+
+3. **Verifikasi Instalasi:**
+
+   - Buka **Command Prompt** (tekan tombol Windows + R, ketik `cmd`, tekan Enter)
+   - Ketik perintah berikut satu per satu:
+
+   ```bash
+   node --version
+   ```
+
+   Harus muncul versi seperti: `v20.11.0` atau `v18.19.0` (minimal v18)
+
+   ```bash
+   npm --version
+   ```
+
+   Harus muncul versi seperti: `10.2.4` atau `9.8.1` (minimal v9)
+
+   **Jika muncul error "'node' is not recognized":**
+
+   - Restart Command Prompt atau komputer
+   - Jika masih error, Node.js belum masuk ke PATH. Ulangi instalasi dan pastikan opsi "Add to PATH" tercentang
+
+**Langkah Instalasi di macOS:**
 
 ```bash
-# Menggunakan Homebrew
+# Opsi 1: Menggunakan Homebrew (jika sudah terinstall)
 brew install node
 
-# Atau download dari https://nodejs.org/ (LTS version recommended)
+# Opsi 2: Download manual dari https://nodejs.org/
+# Pilih file .pkg untuk macOS, double-click dan ikuti wizard instalasi
 ```
 
-**Windows:**
-
-```bash
-# Download installer dari https://nodejs.org/ (LTS version)
-# Jalankan installer dan ikuti petunjuk
-```
-
-**Linux (Ubuntu/Debian):**
-
-```bash
-# Update package manager
-sudo apt update
-
-# Install Node.js
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt-get install -y nodejs
-```
-
-**Verifikasi instalasi:**
+**Verifikasi di macOS/Linux:**
 
 ```bash
 node --version  # Harus v18 atau lebih tinggi
 npm --version   # Harus v9 atau lebih tinggi
 ```
 
+**Langkah Instalasi di Linux (Ubuntu/Debian):**
+
+```bash
+# Buka Terminal dan jalankan:
+sudo apt update
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+
+# Verifikasi
+node --version
+npm --version
+```
+
 #### B. Install Go (untuk Backend)
 
-**macOS:**
+**Apa itu Go?**
+
+- Bahasa pemrograman yang digunakan untuk membuat backend/server aplikasi
+- Perlu diinstall agar backend bisa berjalan
+
+**Langkah Instalasi di Windows:**
+
+1. **Download Go:**
+
+   - Buka browser, kunjungi: https://go.dev/dl/
+   - Cari bagian "Stable versions"
+   - Klik file **"go1.XX.X.windows-amd64.msi"** (pilih versi terbaru)
+   - File sekitar 150-200 MB
+
+2. **Install Go:**
+
+   - Double-click file installer `.msi`
+   - Klik **"Next"** di welcome screen
+   - **Centang** license agreement → Klik **"Next"**
+   - Pilih lokasi instalasi (biarkan default: `C:\Program Files\Go`) → Klik **"Next"**
+   - Klik **"Install"** dan tunggu selesai
+   - Klik **"Finish"**
+
+3. **Verifikasi Instalasi:**
+
+   - Buka **Command Prompt BARU** (penting: harus buka yang baru)
+   - Ketik:
+
+   ```bash
+   go version
+   ```
+
+   Harus muncul: `go version go1.23.X windows/amd64` (minimal go1.20)
+
+   **Jika muncul error "'go' is not recognized":**
+
+   - Tutup dan buka ulang Command Prompt
+   - Atau restart komputer
+
+**Langkah Instalasi di macOS:**
 
 ```bash
-# Menggunakan Homebrew
+# Opsi 1: Menggunakan Homebrew
 brew install go
 
-# Atau download dari https://go.dev/dl/
+# Opsi 2: Download manual
+# Kunjungi https://go.dev/dl/
+# Download file .pkg untuk macOS
+# Double-click dan ikuti wizard instalasi
 ```
 
-**Windows:**
-
-```bash
-# Download installer dari https://go.dev/dl/
-# Jalankan installer dan ikuti petunjuk
-```
-
-**Linux (Ubuntu/Debian):**
-
-```bash
-# Download dan extract
-wget https://go.dev/dl/go1.24.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.24.linux-amd64.tar.gz
-
-# Tambahkan ke PATH (tambahkan ke ~/.bashrc atau ~/.zshrc)
-export PATH=$PATH:/usr/local/go/bin
-source ~/.bashrc  # atau source ~/.zshrc
-```
-
-**Verifikasi instalasi:**
+**Verifikasi di macOS:**
 
 ```bash
 go version  # Harus go1.20 atau lebih tinggi
 ```
 
-#### C. Install PostgreSQL (Database)
-
-**macOS:**
+**Langkah Instalasi di Linux (Ubuntu/Debian):**
 
 ```bash
-# Menggunakan Homebrew
-brew install postgresql@15
-brew services start postgresql@15
+# Buka Terminal dan jalankan:
+wget https://go.dev/dl/go1.23.4.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.23.4.linux-amd64.tar.gz
 
-# Atau download PostgreSQL.app dari https://postgresapp.com/
+# Tambahkan Go ke PATH
+echo 'export PATH=$PATH:/usr/local/go/bin' >> ~/.bashrc
+source ~/.bashrc
+
+# Verifikasi
+go version
 ```
 
-**Windows:**
-
-```bash
-# Download installer dari https://www.postgresql.org/download/windows/
-# Jalankan installer dan ikuti petunjuk
-# Set password untuk user postgres
-```
-
-**Linux (Ubuntu/Debian):**
-
-```bash
-# Install PostgreSQL
-sudo apt update
-sudo apt install postgresql postgresql-contrib
-
-# Start service
-sudo systemctl start postgresql
-sudo systemctl enable postgresql
-```
-
-**Verifikasi instalasi:**
-
-```bash
-psql --version  # Harus PostgreSQL 12 atau lebih tinggi
-```
-
-#### D. Install Git (Version Control)
+#### C. Install Git (Version Control)
 
 **macOS:**
 
@@ -207,224 +252,597 @@ sudo apt install git
 git --version
 ```
 
-### 2. Setup Database PostgreSQL
+### 2. Setup Database Supabase (Cloud Database)
 
-```bash
-# Login ke PostgreSQL
-# macOS/Linux:
-psql postgres
+**Apa itu Supabase?**
 
-# Windows (Command Prompt as Administrator):
-psql -U postgres
+- Database PostgreSQL yang dihost di cloud (online)
+- Tidak perlu install PostgreSQL di komputer lokal
+- Sudah dikonfigurasi dan siap pakai
 
-# Buat database baru
-CREATE DATABASE gdss_db;
+**Informasi Koneksi Database:**
 
-# Buat user baru (opsional)
-CREATE USER gdss_user WITH PASSWORD 'your_password';
+> ⚠️ **Untuk Dosen**: Database sudah dikonfigurasi dan berjalan di Supabase. Tidak perlu setup apapun untuk database. Kredensial database sudah ada di kode backend.
 
-# Berikan akses ke database
-GRANT ALL PRIVILEGES ON DATABASE gdss_db TO gdss_user;
+**Jika perlu membuat database Supabase baru:**
 
-# Keluar dari psql
-\q
-```
+1. Kunjungi: https://supabase.com/
+2. Klik "Start your project" dan daftar (gratis)
+3. Buat project baru
+4. Copy connection string yang diberikan
+5. Paste ke file konfigurasi backend (`services/internal/config/config.go`)
+
+> 💡 **Catatan**: Untuk keperluan menjalankan aplikasi ini, database Supabase sudah dikonfigurasi dan Anda tidak perlu melakukan setup database manual.
 
 ### 3. Clone dan Setup Project
 
-#### A. Clone Repository
+#### A. Clone Repository (Download Project)
 
-```bash
-# Clone repository
-git clone https://github.com/Ghozi-Waridi/project-UAS-Sistem-Informasi.git
+**Apa itu Clone?**
 
-# Masuk ke direktori project
-cd project-UAS-Sistem-Informasi
-```
+- Proses download seluruh kode project dari GitHub ke komputer lokal
+
+**Langkah-langkah:**
+
+1. **Buka Command Prompt / Terminal**
+
+   - Windows: Tekan `Windows + R`, ketik `cmd`, tekan Enter
+   - macOS: Tekan `Cmd + Space`, ketik `terminal`, tekan Enter
+   - Linux: Tekan `Ctrl + Alt + T`
+
+2. **Pindah ke folder tempat Anda ingin menyimpan project**
+
+   ```bash
+   # Contoh Windows - pindah ke Desktop:
+   cd Desktop
+
+   # Contoh macOS/Linux - pindah ke Desktop:
+   cd ~/Desktop
+
+   # Atau buat folder baru terlebih dahulu:
+   # Windows:
+   mkdir Projects
+   cd Projects
+
+   # macOS/Linux:
+   mkdir ~/Projects
+   cd ~/Projects
+   ```
+
+3. **Clone repository**
+
+   ```bash
+   git clone https://github.com/Ghozi-Waridi/project-UAS-Sistem-Informasi.git
+   ```
+
+   Proses ini akan:
+
+   - Download semua file project (sekitar 50-100 MB)
+   - Membuat folder baru bernama `project-UAS-Sistem-Informasi`
+   - Tunggu hingga muncul pesan "done" atau "Resolving deltas: 100%"
+
+4. **Masuk ke direktori project**
+
+   ```bash
+   cd project-UAS-Sistem-Informasi
+   ```
+
+5. **Verifikasi isi folder**
+
+   ```bash
+   # Windows:
+   dir
+
+   # macOS/Linux:
+   ls
+   ```
+
+   Anda harus melihat folder: `interfaces`, `services`, dan beberapa file seperti `README.md`, `start.sh`, dll.
 
 #### B. Setup Backend (Go)
 
-```bash
-# Masuk ke direktori services
-cd services
+**Apa yang dilakukan?**
 
-# Download dependencies
-go mod download
-go mod tidy
+- Menginstall semua library/package yang dibutuhkan backend
+- Mengkonfigurasi koneksi ke database Supabase
 
-# Konfigurasi database
-# Edit file internal/config/config.go
-# Sesuaikan dengan kredensial database Anda:
-# - Host: localhost
-# - Port: 5432
-# - User: gdss_user (atau postgres)
-# - Password: your_password
-# - Database: gdss_db
-```
+**Langkah-langkah:**
 
-**Edit `services/internal/config/config.go`:**
+1. **Masuk ke direktori services**
 
-```go
-// Sesuaikan bagian ini:
-dsn := fmt.Sprintf(
-    "host=localhost user=gdss_user password=your_password dbname=gdss_db port=5432 sslmode=disable",
-)
-```
+   ```bash
+   cd services
+   ```
 
-#### C. Setup Frontend (React)
+2. **Download dependencies (library yang dibutuhkan)**
 
-```bash
-# Kembali ke root directory
-cd ..
+   ```bash
+   go mod download
+   ```
 
-# Masuk ke direktori interfaces
-cd interfaces
+   Proses ini akan:
 
-# Install dependencies
-npm install
+   - Download semua package Go yang dibutuhkan
+   - Memakan waktu 1-3 menit tergantung koneksi internet
+   - Jika berhasil, tidak ada pesan error
 
-# Buat file .env
-cp .env.example .env
+3. **Verify dan cleanup dependencies**
 
-# Atau buat manual file .env dengan isi:
-# VITE_API_URL=http://localhost:8080/api
-```
+   ```bash
+   go mod tidy
+   ```
 
-**Buat file `interfaces/.env`:**
+   Perintah ini akan:
 
-```env
-VITE_API_URL=http://localhost:8080/api
-```
+   - Memverifikasi semua dependencies
+   - Menghapus package yang tidak terpakai
+   - Update file `go.mod` dan `go.sum`
+
+**Konfigurasi Database:**
+
+> ⚠️ **Untuk Dosen**: Konfigurasi database Supabase sudah ada di file `services/internal/config/config.go`. Tidak perlu diubah kecuali ada instruksi khusus.
+
+Jika perlu melihat konfigurasi database:
+
+- File: `services/internal/config/config.go`
+- Connection string Supabase sudah dikonfigurasi
+
+4. **Kembali ke root directory**
+   ```bash
+   cd ..
+   ```
+
+#### C. Setup Frontend (React + Vite)
+
+**Apa yang dilakukan?**
+
+- Menginstall semua library React dan dependencies frontend
+- Mengkonfigurasi koneksi ke backend API
+
+**Langkah-langkah:**
+
+1. **Pastikan Anda di root directory project**
+
+   ```bash
+   # Jika masih di folder services, kembali ke root:
+   cd ..
+   ```
+
+2. **Masuk ke direktori interfaces (folder frontend)**
+
+   ```bash
+   cd interfaces
+   ```
+
+3. **Install dependencies React (PROSES PALING LAMA)**
+
+   ```bash
+   npm install
+   ```
+
+   **Apa yang terjadi:**
+
+   - NPM akan download semua library React, Vite, Tailwind CSS, dll.
+   - Akan membuat folder `node_modules` (berisi ribuan file library)
+   - Proses memakan waktu **5-15 menit** tergantung:
+     - Kecepatan internet (download sekitar 200-400 MB)
+     - Kecepatan processor komputer
+   - Anda akan melihat progress bar dan banyak text di layar
+   - **TUNGGU HINGGA SELESAI** sampai muncul kembali command prompt
+
+   **Jika muncul warning (text kuning):**
+
+   - Abaikan saja, itu normal
+   - Yang penting tidak ada error (text merah)
+
+   **Jika muncul error:**
+
+   - Coba jalankan ulang: `npm install`
+   - Atau hapus folder `node_modules` dulu: `rm -rf node_modules` (macOS/Linux) atau `rmdir /s node_modules` (Windows), lalu `npm install` lagi
+
+4. **Buat file konfigurasi .env**
+
+   **Cara 1 - Otomatis (jika ada file .env.example):**
+
+   ```bash
+   # macOS/Linux:
+   cp .env.example .env
+
+   # Windows:
+   copy .env.example .env
+   ```
+
+   **Cara 2 - Manual (jika tidak ada .env.example):**
+
+   - Buka folder `interfaces` di File Explorer / Finder
+   - Klik kanan → New → Text Document
+   - Beri nama: `.env` (dengan titik di depan, tanpa extension .txt)
+   - Buka file `.env` dengan Notepad / Text Editor
+   - Ketik isi berikut:
+
+   ```env
+   VITE_API_URL=http://localhost:8080/api
+   ```
+
+   - Save file
+
+5. **Verifikasi instalasi berhasil**
+
+   ```bash
+   # Cek apakah folder node_modules ada:
+   # Windows:
+   dir node_modules
+
+   # macOS/Linux:
+   ls node_modules
+   ```
+
+   Harus ada banyak folder di dalam `node_modules`
+
+6. **Kembali ke root directory**
+   ```bash
+   cd ..
+   ```
+
+> ✅ **Setup selesai!** Sekarang project siap untuk dijalankan.
 
 ### 4. Jalankan Aplikasi
 
-#### Opsi 1: Menggunakan Script Otomatis (Recommended)
+> ⚠️ **Penting**: Backend dan Frontend harus berjalan BERSAMAAN. Keduanya perlu 2 terminal/command prompt terpisah.
+
+#### Opsi 1: Otomatis dengan Script (Untuk macOS/Linux)
 
 ```bash
-# Kembali ke root directory
-cd ..
-
-# Jalankan semua service
+# Di root directory project:
 ./start.sh
 ```
 
-#### Opsi 2: Manual (Jalankan di Terminal Terpisah)
+**Script ini akan otomatis:**
 
-**Terminal 1 - Backend:**
+- Menjalankan backend di background
+- Menjalankan frontend
+- Kedua service berjalan bersamaan
 
-```bash
-cd services
-go run cmd/api/main.go
-```
+#### Opsi 2: Manual - Step by Step (RECOMMENDED untuk Windows)
 
-**Terminal 2 - Frontend:**
+**Langkah A - Jalankan Backend:**
 
-```bash
-cd interfaces
-npm run dev
-```
+1. **Buka Command Prompt / Terminal PERTAMA**
 
-### 5. Akses Aplikasi
+   - Windows: Tekan `Windows + R`, ketik `cmd`, Enter
+   - macOS/Linux: Buka Terminal baru
 
-Setelah berhasil dijalankan:
+2. **Navigasi ke folder project dan masuk ke services**
 
-- **Frontend**: Buka browser dan akses http://localhost:5173
-- **Backend API**: http://localhost:8080
-- **API Documentation**: http://localhost:8080/api
+   ```bash
+   # Ganti path ini sesuai lokasi project Anda
+   cd Desktop/project-UAS-Sistem-Informasi
+   cd services
+   ```
+
+3. **Jalankan backend**
+
+   ```bash
+   go run cmd/api/main.go
+   ```
+
+   **Apa yang terjadi:**
+
+   - Backend akan mulai compile dan running
+   - Proses compile pertama kali memakan waktu 30-60 detik
+   - Jika berhasil, akan muncul pesan seperti:
+     ```
+     [GIN-debug] Listening and serving HTTP on :8080
+     ```
+   - **JANGAN TUTUP TERMINAL INI** - biarkan tetap berjalan
+   - Jika muncul error, lihat bagian Troubleshooting di bawah
+
+**Langkah B - Jalankan Frontend (Terminal Kedua):**
+
+1. **Buka Command Prompt / Terminal KEDUA (BARU)**
+
+   - Windows: Buka Command Prompt baru lagi
+   - macOS/Linux: Buka tab Terminal baru (`Cmd + T`)
+
+2. **Navigasi ke folder interfaces**
+
+   ```bash
+   # Ganti path ini sesuai lokasi project Anda
+   cd Desktop/project-UAS-Sistem-Informasi
+   cd interfaces
+   ```
+
+3. **Jalankan frontend**
+
+   ```bash
+   npm run dev
+   ```
+
+   **Apa yang terjadi:**
+
+   - Vite development server akan mulai
+   - Proses memakan waktu 5-10 detik
+   - Jika berhasil, akan muncul pesan:
+
+     ```
+     VITE v5.x.x ready in xxx ms
+
+     ➜  Local:   http://localhost:5173/
+     ➜  Network: use --host to expose
+     ```
+
+   - **JANGAN TUTUP TERMINAL INI** - biarkan tetap berjalan
+
+4. **Sekarang Anda memiliki 2 terminal/command prompt yang berjalan:**
+   - Terminal 1: Backend (port 8080)
+   - Terminal 2: Frontend (port 5173)
+
+### 5. Akses Aplikasi di Browser
+
+**Setelah kedua service berjalan:**
+
+1. **Buka Browser** (Chrome, Firefox, Edge, Safari - yang mana saja)
+
+2. **Ketik di address bar:**
+
+   ```
+   http://localhost:5173
+   ```
+
+   Atau klik link ini jika Anda membaca di browser: [http://localhost:5173](http://localhost:5173)
+
+3. **Halaman login GDSS Pro akan muncul**
+   - Jika halaman tidak muncul, pastikan:
+     - Frontend masih berjalan di terminal (cek terminal 2)
+     - Backend masih berjalan di terminal (cek terminal 1)
+     - Tidak ada error di kedua terminal
+
+**URL Penting:**
+
+- **Frontend (Aplikasi Web)**: http://localhost:5173 ← **INI YANG ANDA AKSES**
+- **Backend API**: http://localhost:8080 (tidak perlu dibuka di browser)
 
 ### 6. Login ke Aplikasi
 
-**Default Admin Account:**
+**Akun Admin Default:**
 
 ```
 Username: admin
 Password: admin123
 ```
 
-**Default Decision Maker Account:**
+**Fungsi Admin:**
+
+- Mengelola proyek keputusan
+- Menambah/edit kandidat
+- Mengelola kriteria
+- Menambah decision maker
+- Melihat hasil akhir dan konsensus
+
+---
+
+**Akun Decision Maker Default:**
 
 ```
 Username: dm1
 Password: dm123
 ```
 
-> ⚠️ **Penting**: Ganti password default setelah login pertama kali!
+**Fungsi Decision Maker:**
 
-### 7. Troubleshooting Instalasi
+- Memberikan penilaian terhadap kandidat
+- Input bobot kriteria (AHP/Direct Weight)
+- Melihat hasil seleksi
+- Melihat detail konsensus
 
-#### Problem: Port sudah digunakan
+> 💡 **Cara Login:**
+>
+> 1. Pilih role (Admin atau Decision Maker)
+> 2. Masukkan username dan password
+> 3. Klik tombol Login
+> 4. Anda akan diarahkan ke dashboard sesuai role
+
+> ⚠️ **Catatan**: Untuk keperluan demo/presentasi, gunakan akun default di atas.
+
+### 7. Troubleshooting (Pemecahan Masalah)
+
+#### ❌ Problem: "Port 8080 sudah digunakan" (Backend)
+
+**Penyebab:**
+
+- Ada aplikasi lain yang menggunakan port 8080
+- Backend masih berjalan dari sesi sebelumnya
+
+**Solusi Windows:**
 
 ```bash
-# Cek proses yang menggunakan port
-# macOS/Linux:
-lsof -i :8080  # Backend port
-lsof -i :5173  # Frontend port
-
-# Windows:
+# Cari proses yang menggunakan port 8080:
 netstat -ano | findstr :8080
-netstat -ano | findstr :5173
 
-# Kill proses jika diperlukan
-# macOS/Linux:
+# Akan muncul seperti:
+# TCP    0.0.0.0:8080    0.0.0.0:0    LISTENING    12345
+# Angka terakhir (12345) adalah PID
+
+# Kill proses dengan PID tersebut:
+taskkill /PID 12345 /F
+```
+
+**Solusi macOS/Linux:**
+
+```bash
+# Cari proses:
+lsof -i :8080
+
+# Kill proses:
 kill -9 <PID>
-
-# Windows:
-taskkill /PID <PID> /F
 ```
 
-#### Problem: Database connection error
+---
 
-```bash
-# Pastikan PostgreSQL berjalan
-# macOS:
-brew services list | grep postgresql
+#### ❌ Problem: "Port 5173 sudah digunakan" (Frontend)
 
-# Linux:
-sudo systemctl status postgresql
+**Solusi sama seperti di atas, ganti 8080 dengan 5173**
 
-# Windows:
-# Cek di Services (services.msc)
+---
 
-# Restart PostgreSQL jika perlu
-# macOS:
-brew services restart postgresql@15
+#### ❌ Problem: "go: command not found" atau "npm: command not found~"
 
-# Linux:
-sudo systemctl restart postgresql
-```
+**Penyebab:**
 
-#### Problem: Go modules error
+- Go/Node.js belum terinstall
+- Belum masuk ke PATH environment
 
-```bash
-cd services
-go clean -modcache
-go mod download
-go mod tidy
-```
+**Solusi:**
 
-#### Problem: npm install error
+1. Verifikasi instalasi:
+
+   ```bash
+   go version
+   node --version
+   npm --version
+   ```
+
+2. Jika command not found:
+   - **Restart Command Prompt/Terminal**
+   - **Restart Komputer**
+   - Jika masih error, **install ulang** Go/Node.js dan pastikan centang "Add to PATH"
+
+---
+
+#### ❌ Problem: npm install gagal atau error
+
+**Solusi 1 - Clear cache dan install ulang:**
 
 ```bash
 cd interfaces
+
+# Hapus node_modules dan cache
+# Windows:
+rmdir /s /q node_modules
+del package-lock.json
+
+# macOS/Linux:
 rm -rf node_modules
 rm package-lock.json
+
+# Clear npm cache
 npm cache clean --force
+
+# Install ulang
 npm install
 ```
 
-### 8. Stop Aplikasi
+**Solusi 2 - Update npm:**
 
 ```bash
-# Menggunakan script
-./stop.sh
-
-# Atau manual: Tekan Ctrl+C di setiap terminal yang menjalankan service
+npm install -g npm@latest
 ```
+
+---
+
+#### ❌ Problem: Backend error "database connection failed"
+
+**Penyebab:**
+
+- Koneksi internet bermasalah (Supabase adalah cloud database)
+- Kredensial database salah
+- Database Supabase belum dikonfigurasi
+
+**Solusi:**
+
+1. Cek koneksi internet
+2. Pastikan kredensial database di `services/internal/config/config.go` benar
+3. Hubungi pembuat project untuk kredensial database yang valid
+
+---
+
+#### ❌ Problem: Halaman putih / blank di browser
+
+**Solusi:**
+
+1. Buka Developer Console browser:
+   - Tekan `F12` atau `Ctrl+Shift+I` (Windows/Linux)
+   - Atau `Cmd+Option+I` (macOS)
+2. Lihat tab "Console" - cari pesan error berwarna merah
+3. Biasanya masalah:
+   - Backend tidak berjalan (cek terminal 1)
+   - URL API salah di file `.env`
+   - CORS error (hubungi pembuat project)
+
+---
+
+#### ❌ Problem: Go build/compile error
+
+**Solusi:**
+
+```bash
+cd services
+
+# Clear module cache
+go clean -modcache
+
+# Download ulang dependencies
+go mod download
+go mod tidy
+
+# Coba jalankan lagi
+go run cmd/api/main.go
+```
+
+---
+
+#### ❌ Problem: "Cannot find module" di React
+
+**Solusi:**
+
+```bash
+cd interfaces
+npm install
+```
+
+Jika masih error:
+
+```bash
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### 8. Stop / Matikan Aplikasi
+
+**Cara 1 - Manual (RECOMMENDED):**
+
+1. **Stop Frontend:**
+
+   - Klik di terminal yang menjalankan frontend (terminal 2)
+   - Tekan `Ctrl + C` (Windows/Linux) atau `Cmd + C` (macOS)
+   - Ketik `Y` jika diminta konfirmasi
+   - Terminal akan berhenti dan kembali ke command prompt
+
+2. **Stop Backend:**
+
+   - Klik di terminal yang menjalankan backend (terminal 1)
+   - Tekan `Ctrl + C` (Windows/Linux) atau `Cmd + C` (macOS)
+   - Backend akan berhenti
+
+3. **Kedua terminal sekarang tidak menjalankan aplikasi lagi**
+
+**Cara 2 - Otomatis (macOS/Linux):**
+
+```bash
+./stop.sh
+```
+
+**Cara 3 - Tutup terminal:**
+
+- Cukup tutup kedua window terminal/command prompt
+- Aplikasi akan otomatis berhenti
+
+> ⚠️ **Penting**: Setiap kali ingin menjalankan aplikasi lagi, ulangi langkah di bagian "4. Jalankan Aplikasi"
 
 ## 🔄 Update Project
 
 ```bash
-# Pull perubahan terbaru
+# Pull perubahan terbaru dari GitHub
 git pull origin main
 
 # Update backend dependencies
@@ -439,41 +857,6 @@ npm install
 cd ..
 ./start.sh
 ```
-
-### Running the Application
-
-**Option 1: Automatic (Recommended)**
-
-```bash
-./start.sh
-```
-
-**Option 2: Manual**
-
-Terminal 1 - Backend:
-
-```bash
-cd services
-go run cmd/api/main.go
-```
-
-Terminal 2 - Frontend:
-
-```bash
-cd interfaces
-npm run dev
-```
-
-### Stop the Application
-
-```bash
-./stop.sh
-```
-
-### Access
-
-- Frontend: http://localhost:5173
-- Backend API: http://localhost:8080
 
 ## 📁 Project Structure
 
