@@ -64,29 +64,380 @@ GDSS Pro adalah aplikasi web full-stack untuk mendukung proses pengambilan keput
 ./check-prerequisites.sh
 ```
 
-### Installation
+## 📥 Instalasi Lengkap dari Awal
 
-1. **Clone repository**
+### 1. Instalasi Software yang Diperlukan
+
+#### A. Install Node.js (untuk Frontend)
+
+**macOS:**
 
 ```bash
-git clone <repository-url>
+# Menggunakan Homebrew
+brew install node
+
+# Atau download dari https://nodejs.org/ (LTS version recommended)
+```
+
+**Windows:**
+
+```bash
+# Download installer dari https://nodejs.org/ (LTS version)
+# Jalankan installer dan ikuti petunjuk
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+# Update package manager
+sudo apt update
+
+# Install Node.js
+curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+**Verifikasi instalasi:**
+
+```bash
+node --version  # Harus v18 atau lebih tinggi
+npm --version   # Harus v9 atau lebih tinggi
+```
+
+#### B. Install Go (untuk Backend)
+
+**macOS:**
+
+```bash
+# Menggunakan Homebrew
+brew install go
+
+# Atau download dari https://go.dev/dl/
+```
+
+**Windows:**
+
+```bash
+# Download installer dari https://go.dev/dl/
+# Jalankan installer dan ikuti petunjuk
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+# Download dan extract
+wget https://go.dev/dl/go1.24.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.24.linux-amd64.tar.gz
+
+# Tambahkan ke PATH (tambahkan ke ~/.bashrc atau ~/.zshrc)
+export PATH=$PATH:/usr/local/go/bin
+source ~/.bashrc  # atau source ~/.zshrc
+```
+
+**Verifikasi instalasi:**
+
+```bash
+go version  # Harus go1.20 atau lebih tinggi
+```
+
+#### C. Install PostgreSQL (Database)
+
+**macOS:**
+
+```bash
+# Menggunakan Homebrew
+brew install postgresql@15
+brew services start postgresql@15
+
+# Atau download PostgreSQL.app dari https://postgresapp.com/
+```
+
+**Windows:**
+
+```bash
+# Download installer dari https://www.postgresql.org/download/windows/
+# Jalankan installer dan ikuti petunjuk
+# Set password untuk user postgres
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+# Install PostgreSQL
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Start service
+sudo systemctl start postgresql
+sudo systemctl enable postgresql
+```
+
+**Verifikasi instalasi:**
+
+```bash
+psql --version  # Harus PostgreSQL 12 atau lebih tinggi
+```
+
+#### D. Install Git (Version Control)
+
+**macOS:**
+
+```bash
+# Biasanya sudah terinstall, jika belum:
+brew install git
+```
+
+**Windows:**
+
+```bash
+# Download dari https://git-scm.com/download/win
+# Jalankan installer dan ikuti petunjuk
+```
+
+**Linux (Ubuntu/Debian):**
+
+```bash
+sudo apt update
+sudo apt install git
+```
+
+**Verifikasi instalasi:**
+
+```bash
+git --version
+```
+
+### 2. Setup Database PostgreSQL
+
+```bash
+# Login ke PostgreSQL
+# macOS/Linux:
+psql postgres
+
+# Windows (Command Prompt as Administrator):
+psql -U postgres
+
+# Buat database baru
+CREATE DATABASE gdss_db;
+
+# Buat user baru (opsional)
+CREATE USER gdss_user WITH PASSWORD 'your_password';
+
+# Berikan akses ke database
+GRANT ALL PRIVILEGES ON DATABASE gdss_db TO gdss_user;
+
+# Keluar dari psql
+\q
+```
+
+### 3. Clone dan Setup Project
+
+#### A. Clone Repository
+
+```bash
+# Clone repository
+git clone https://github.com/Ghozi-Waridi/project-UAS-Sistem-Informasi.git
+
+# Masuk ke direktori project
 cd project-UAS-Sistem-Informasi
 ```
 
-2. **Setup Frontend**
+#### B. Setup Backend (Go)
 
 ```bash
-cd interfaces
-npm install
-cp .env.example .env
+# Masuk ke direktori services
+cd services
+
+# Download dependencies
+go mod download
+go mod tidy
+
+# Konfigurasi database
+# Edit file internal/config/config.go
+# Sesuaikan dengan kredensial database Anda:
+# - Host: localhost
+# - Port: 5432
+# - User: gdss_user (atau postgres)
+# - Password: your_password
+# - Database: gdss_db
 ```
 
-3. **Setup Backend**
+**Edit `services/internal/config/config.go`:**
+
+```go
+// Sesuaikan bagian ini:
+dsn := fmt.Sprintf(
+    "host=localhost user=gdss_user password=your_password dbname=gdss_db port=5432 sslmode=disable",
+)
+```
+
+#### C. Setup Frontend (React)
+
+```bash
+# Kembali ke root directory
+cd ..
+
+# Masuk ke direktori interfaces
+cd interfaces
+
+# Install dependencies
+npm install
+
+# Buat file .env
+cp .env.example .env
+
+# Atau buat manual file .env dengan isi:
+# VITE_API_URL=http://localhost:8080/api
+```
+
+**Buat file `interfaces/.env`:**
+
+```env
+VITE_API_URL=http://localhost:8080/api
+```
+
+### 4. Jalankan Aplikasi
+
+#### Opsi 1: Menggunakan Script Otomatis (Recommended)
+
+```bash
+# Kembali ke root directory
+cd ..
+
+# Jalankan semua service
+./start.sh
+```
+
+#### Opsi 2: Manual (Jalankan di Terminal Terpisah)
+
+**Terminal 1 - Backend:**
 
 ```bash
 cd services
+go run cmd/api/main.go
+```
+
+**Terminal 2 - Frontend:**
+
+```bash
+cd interfaces
+npm run dev
+```
+
+### 5. Akses Aplikasi
+
+Setelah berhasil dijalankan:
+
+- **Frontend**: Buka browser dan akses http://localhost:5173
+- **Backend API**: http://localhost:8080
+- **API Documentation**: http://localhost:8080/api
+
+### 6. Login ke Aplikasi
+
+**Default Admin Account:**
+
+```
+Username: admin
+Password: admin123
+```
+
+**Default Decision Maker Account:**
+
+```
+Username: dm1
+Password: dm123
+```
+
+> ⚠️ **Penting**: Ganti password default setelah login pertama kali!
+
+### 7. Troubleshooting Instalasi
+
+#### Problem: Port sudah digunakan
+
+```bash
+# Cek proses yang menggunakan port
+# macOS/Linux:
+lsof -i :8080  # Backend port
+lsof -i :5173  # Frontend port
+
+# Windows:
+netstat -ano | findstr :8080
+netstat -ano | findstr :5173
+
+# Kill proses jika diperlukan
+# macOS/Linux:
+kill -9 <PID>
+
+# Windows:
+taskkill /PID <PID> /F
+```
+
+#### Problem: Database connection error
+
+```bash
+# Pastikan PostgreSQL berjalan
+# macOS:
+brew services list | grep postgresql
+
+# Linux:
+sudo systemctl status postgresql
+
+# Windows:
+# Cek di Services (services.msc)
+
+# Restart PostgreSQL jika perlu
+# macOS:
+brew services restart postgresql@15
+
+# Linux:
+sudo systemctl restart postgresql
+```
+
+#### Problem: Go modules error
+
+```bash
+cd services
+go clean -modcache
+go mod download
 go mod tidy
-# Setup database configuration in internal/config/config.go
+```
+
+#### Problem: npm install error
+
+```bash
+cd interfaces
+rm -rf node_modules
+rm package-lock.json
+npm cache clean --force
+npm install
+```
+
+### 8. Stop Aplikasi
+
+```bash
+# Menggunakan script
+./stop.sh
+
+# Atau manual: Tekan Ctrl+C di setiap terminal yang menjalankan service
+```
+
+## 🔄 Update Project
+
+```bash
+# Pull perubahan terbaru
+git pull origin main
+
+# Update backend dependencies
+cd services
+go mod tidy
+
+# Update frontend dependencies
+cd ../interfaces
+npm install
+
+# Restart aplikasi
+cd ..
+./start.sh
 ```
 
 ### Running the Application
